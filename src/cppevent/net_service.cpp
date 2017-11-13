@@ -2,6 +2,7 @@
 #ifndef WIN32
 #include <signal.h>
 #endif
+#include <string.h>
 #include <assert.h>
 #include <mutex>
 #include <condition_variable>

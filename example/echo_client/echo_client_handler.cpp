@@ -1,4 +1,5 @@
 #include "echo_client_handler.h"
+#include <string.h>
 
 void EchoClientHandler::OnConnected(cppevent::Peer *peer)
 {

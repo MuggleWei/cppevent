@@ -2,6 +2,10 @@
 #define CPP_EVENT_DEF_H_
 
 #include <functional>
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
 
 // windows export macro
 #if WIN32 && defined(cppevent_USE_DLL)

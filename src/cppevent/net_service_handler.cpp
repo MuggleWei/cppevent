@@ -29,7 +29,7 @@ int NetServiceHandler::OnNewSocket(cppevent_socket_t fd, struct sockaddr_storage
 	{
 		static int s_idx = 0;
 		ret = owner_->worker_threads_[s_idx++]->AddSocket(fd, ss, slen, connect_cb);
-		if (s_idx >= owner_->worker_threads_.size())
+		if (s_idx >= (int)owner_->worker_threads_.size())
 		{
 			s_idx = 0;
 		}

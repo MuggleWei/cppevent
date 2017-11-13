@@ -6,6 +6,8 @@
 
 NS_CPPEVENT_BEGIN
 
+class NetService;
+
 class NetServiceHandler
 {
 	friend class NetService;

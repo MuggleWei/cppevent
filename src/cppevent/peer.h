@@ -17,6 +17,8 @@ enum ePeerFlag
 	PEER_FLAG_DONT_ERASE = 0x02,
 };
 
+class WorkerThread;
+
 class Peer
 {
 	friend class WorkerThread;

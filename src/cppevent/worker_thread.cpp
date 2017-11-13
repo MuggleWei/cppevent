@@ -1,5 +1,6 @@
 #include "worker_thread.h"
 #include <assert.h>
+#include <string.h>
 #include <mutex>
 #include <condition_variable>
 #include <event2/event.h>
@@ -429,7 +430,7 @@ Peer* WorkerThread::AddSocketImmediately(cppevent_socket_t fd, struct sockaddr_s
 	peer->setBev((void*)bev);
 
 	struct sockaddr_storage local_ss;
-	int local_ss_len = sizeof(local_ss);
+	cppevent_socklen_t local_ss_len = sizeof(local_ss);
 	getsockname(fd, (struct sockaddr*)&local_ss, &local_ss_len);
 	get_sockaddr_port((struct sockaddr*)&local_ss, peer->local_addr_, sizeof(peer->local_addr_));
 	get_sockaddr_port((struct sockaddr*)ss, peer->remote_addr_, sizeof(peer->remote_addr_));
