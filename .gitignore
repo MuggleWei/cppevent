@@ -1,0 +1,8 @@
+# cmake directory
+build/
+
+# vim
+*~
+
+# vscode
+.vscode/
