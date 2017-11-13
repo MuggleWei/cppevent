@@ -7,6 +7,7 @@
 #endif
 
 #include "cppevent/cppevent_def.h"
+#include "cppevent/byte_buf.h"
 
 NS_CPPEVENT_BEGIN
 
@@ -27,37 +28,21 @@ public:
 	cppevent_EXPORT void Close();
 
 	/*
-	 * Returns the total number of bytes stored in the buffer
-	 * @return the number of bytes stored in the peer's buffer
-	 */
-	cppevent_EXPORT size_t GetByteLength();
-
-	/*
-	 * Read data from peer, and leave the buffer unchanged
-	 * @return the number of bytes read, or -1 if we can't drain the buffer.
-	 */
-	cppevent_EXPORT size_t PeekBytes(void *data_out, size_t datalen);
-
-	/*
-	 * Read data from peer, draining the bytes from the source buffer
-	 * @return the number of bytes read, or -1 if we can't drain the buffer.
-	 */
-	cppevent_EXPORT size_t ReadBytes(void *data_out, size_t datalen);
-
-	/*
-	 * Write data into peer, if invoke thread is the same thread 
-	 * as the peer owner thread (e.g. in the handler callback), 
-	 * then it's safe to write. otherwise, user need ensure thread
-	 * safe by user self
+	 * flush output data out
 	 * @return 0 if successful, or -1 if an error occurred
 	 */
-	cppevent_EXPORT int Write(void *data_out, size_t datalen);
-	cppevent_EXPORT int WriteAndFlush(void *data_out, size_t datalen);
+	cppevent_EXPORT int FlushOutput();
 	
 	cppevent_EXPORT const char* getLocalAddr() { return local_addr_; }
 	cppevent_EXPORT const char* getRemoteAddr() { return remote_addr_; }
 
 	cppevent_EXPORT WorkerThread* getOwnerThread() { return owner_thread_; }
+
+	cppevent_EXPORT ByteBuffer& getInputByteBuf() { return byte_buf_in_; }
+	cppevent_EXPORT ByteBuffer& getOutputByteBuf() { return byte_buf_out_; }
+
+private:
+	void setBev(void *bev);
 
 public:
 	void *extra_;
@@ -65,6 +50,8 @@ public:
 private:
 	WorkerThread *owner_thread_;
 	void *bev_;
+	ByteBuffer byte_buf_in_;
+	ByteBuffer byte_buf_out_;
 
 	char local_addr_[128];
 	char remote_addr_[128];

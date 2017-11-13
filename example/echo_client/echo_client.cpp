@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		int len = GetTimeAndHelloWorld(buf, sizeof(buf)-1);
-		peer->Write(buf, len);
+		peer->getOutputByteBuf().Write(buf, len);
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 

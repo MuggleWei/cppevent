@@ -10,14 +10,14 @@ void EchoClientHandler::OnRead(cppevent::Peer *peer)
 	while (true)
 	{
 		memset(buf, 0, sizeof(buf));
-		size_t len = peer->GetByteLength();
+		size_t len = peer->getInputByteBuf().GetByteLength();
 		if (len == 0)
 		{
 			return;
 		}
 
 		len = len > 1024 ? 1024 : len;
-		size_t read_bytes = peer->ReadBytes(buf, len);
+		size_t read_bytes = peer->getInputByteBuf().ReadBytes(buf, len);
 		if (read_bytes == -1)
 		{
 			fprintf(stderr, "error read!\n");

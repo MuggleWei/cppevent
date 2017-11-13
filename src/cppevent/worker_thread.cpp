@@ -426,7 +426,7 @@ Peer* WorkerThread::AddSocketImmediately(cppevent_socket_t fd, struct sockaddr_s
 
 	// fill out base info
 	peer->owner_thread_ = this;
-	peer->bev_ = (void*)bev;
+	peer->setBev((void*)bev);
 
 	struct sockaddr_storage local_ss;
 	int local_ss_len = sizeof(local_ss);
