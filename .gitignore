@@ -3,6 +3,7 @@ build/
 
 # vim
 *~
+/compile_commands.json
 
 # vscode
 .vscode/

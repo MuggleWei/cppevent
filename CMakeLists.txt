@@ -17,6 +17,11 @@ endif()
 # include cmake
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/muggle_utils.cmake)
 
+# for vim plugin - YCM
+if (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+	set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+
 # set output directory
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
