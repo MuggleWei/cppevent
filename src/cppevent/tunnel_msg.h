@@ -10,6 +10,7 @@ NS_CPPEVENT_BEGIN
 enum TunnelMsgType
 {
 	TunnelMsgType_Profile = 0,
+	TunnelMsgType_Stop,
 	TunnelMsgType_Timer,
 	TunnelMsgType_StopTimer,
 };
@@ -32,6 +33,14 @@ public:
 	{}
 
 	int64_t microsec;
+};
+
+class TunnelMsgStop : public TunnelMsg
+{
+public:
+	TunnelMsgStop()
+		: TunnelMsg(TunnelMsgType_Stop)
+	{}
 };
 
 class TunnelMsgAddTimer : public TunnelMsg

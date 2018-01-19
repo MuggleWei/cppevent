@@ -2,6 +2,7 @@
 #define CPP_EVENT_EVENT_LOOP_H_
 
 #include "cppevent/cppevent_def.h"
+#include <vector>
 #include <thread>
 #include <future>
 #include "cppevent/tunnel.h"
@@ -16,14 +17,15 @@ public:
 	cppevent_EXPORT virtual ~EventLoop();
 
 	cppevent_EXPORT void run();
+	cppevent_EXPORT void stop();
+
+	// just for test tunnel profile
+	cppevent_EXPORT void profileTunnel();
 
 	cppevent_EXPORT std::future<Timer*> addTimer(long mill_seconds, std::function<void()> &&fn);
 	cppevent_EXPORT std::future<Timer*> addTimerOnce(long mill_seconds, std::function<void()> &&fn);
 
 	cppevent_EXPORT void stopTimer(Timer *timer);
-
-	// just for test tunnel profile
-	cppevent_EXPORT void profileTunnel();
 
 public:
 	void* getBase();
@@ -32,16 +34,21 @@ public:
 	void tunnelRead(void *arg);
 
 private:
-	std::future<Timer*> internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once);
+	void clean();
 
+	void stopSync();
+
+	std::future<Timer*> internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once);
 	Timer* addTimerSync(long mill_seconds, std::function<void()> &&fn, bool is_once);
+
 	void stopTimerSync(Timer *timer);
 
 private:
 	void *base_;
-	Tunnel *tunnel_;
-
 	std::thread::id thread_id_;
+
+	Tunnel *tunnel_;
+	std::vector<Timer*> timers_;
 };
 
 NS_CPPEVENT_END

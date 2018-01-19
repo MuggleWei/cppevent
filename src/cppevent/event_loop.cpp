@@ -1,4 +1,5 @@
 #include "event_loop.h"
+#include <signal.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
@@ -72,8 +73,8 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 
 EventLoop::EventLoop()
 	: base_(nullptr)
-	, tunnel_(nullptr)
 	, thread_id_(std::this_thread::get_id())
+	, tunnel_(nullptr)
 {
 	EventGlobalInit();
 
@@ -91,11 +92,6 @@ EventLoop::EventLoop()
 }
 EventLoop::~EventLoop()
 {
-	if (tunnel_)
-	{
-		delete tunnel_;
-	}
-
 	if (base_)
 	{
 		event_base_free((struct event_base*)base_);
@@ -107,7 +103,28 @@ void EventLoop::run()
 {
 	thread_id_ = std::this_thread::get_id();
 	event_base_loop((struct event_base*)base_, EVLOOP_NO_EXIT_ON_EMPTY);
-	event_base_free((struct event_base*)base_);
+
+	clean();
+}
+void EventLoop::stop()
+{
+	if (std::this_thread::get_id() == thread_id_)
+	{
+		stopSync();
+	}
+	else
+	{
+		TunnelMsgStop *msg = new TunnelMsgStop();
+		tunnelWrite((void*)msg);
+	}
+}
+
+void EventLoop::profileTunnel()
+{
+	cppevent::TunnelMsgProfile *msg = new cppevent::TunnelMsgProfile(0);
+	auto t = std::chrono::system_clock::now().time_since_epoch();
+	msg->microsec = (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(t).count();
+	this->tunnelWrite((void*)msg);
 }
 
 std::future<Timer*> EventLoop::addTimer(long mill_seconds, std::function<void()> &&fn)
@@ -132,14 +149,6 @@ void EventLoop::stopTimer(Timer *timer)
 	}
 }
 
-void EventLoop::profileTunnel()
-{
-	cppevent::TunnelMsgProfile *msg = new cppevent::TunnelMsgProfile(0);
-	auto t = std::chrono::system_clock::now().time_since_epoch();
-	msg->microsec = (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(t).count();
-	this->tunnelWrite((void*)msg);
-}
-
 void* EventLoop::getBase()
 {
 	return base_;
@@ -161,6 +170,11 @@ void EventLoop::tunnelRead(void *arg)
 		int64_t diff = (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(t).count() - msg->microsec;
 		std::cout << "use " << diff << " micro seconds" << std::endl;
 	}break;
+	case TunnelMsgType_Stop:
+	{
+		std::shared_ptr<TunnelMsgStop> msg((TunnelMsgStop*)message);
+		stopSync();
+	}break;
 	case TunnelMsgType_Timer:
 	{
 		std::shared_ptr<TunnelMsgAddTimer> msg((TunnelMsgAddTimer*)message);
@@ -175,6 +189,25 @@ void EventLoop::tunnelRead(void *arg)
 	}
 }
 
+void EventLoop::clean()
+{
+	if (tunnel_)
+	{
+		delete tunnel_;
+		tunnel_ = nullptr;
+	}
+
+	for (auto &p_timer : timers_)
+	{
+		stopTimer(p_timer);
+	}
+	timers_.clear();
+}
+
+void EventLoop::stopSync()
+{
+	event_base_loopbreak((struct event_base*)base_);
+}
 
 std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once)
 {
@@ -198,7 +231,6 @@ std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function
 
 	return future;
 }
-
 Timer* EventLoop::addTimerSync(long mill_seconds, std::function<void()> &&fn, bool is_once)
 {
 	short events = is_once ? EV_TIMEOUT : EV_TIMEOUT | EV_PERSIST;
@@ -212,11 +244,13 @@ Timer* EventLoop::addTimerSync(long mill_seconds, std::function<void()> &&fn, bo
 		event_add((struct event*)timer->ev, &tv);
 	}
 
+	timers_.push_back(timer);
+
 	return timer;
 }
 void EventLoop::stopTimerSync(Timer *timer)
 {
-	if (timer && timer->ev)
+	if (timer)
 	{
 		event_free((struct event*)timer->ev);
 		delete timer;

@@ -138,9 +138,11 @@ function(add_example name folder)
 	muggle_add_project(${name} ${folder} EXE)
 	target_link_libraries(${name}
 		cppevent
+		muggleCC
 	)
 	add_dependencies(${name}
 		cppevent
+		muggleCC
 	)
 	set_target_properties(${name}
 		PROPERTIES
