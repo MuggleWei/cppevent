@@ -1,3 +1,6 @@
 [submodule "thirdparty/libevent"]
 	path = thirdparty/libevent
 	url = https://github.com/nmathewson/Libevent.git
+[submodule "thirdparty/muggleCC"]
+	path = thirdparty/muggleCC
+	url = https://github.com/MuggleWei/muggleCC.git

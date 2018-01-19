@@ -66,6 +66,8 @@ private:
 
 typedef std::function<void(Peer*)> FuncConnectCallback;
 
+// TODO: Add Peer Container
+
 NS_CPPEVENT_END
 
 #endif

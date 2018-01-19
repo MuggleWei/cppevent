@@ -38,8 +38,10 @@ option(CPP_EVENT__BUILD_exmaple "cpp event build examples" ON)
 set(USE_LIBEVENT_WITH_SOURCE ON CACHE BOOL "use libevent with source, if it OFF, try to find libevent binary in system")
 if (USE_LIBEVENT_WITH_SOURCE)
 	include(${CMAKE_CURRENT_LIST_DIR}/cmake/FindLibeventSrc.cmake)
-	if(LibeventSrc_FOUND)	
-		SET(EVENT__DISABLE_OPENSSL ON CACHE BOOL "close libevent openssl")				# libevent close openssl in windows
+	if(LibeventSrc_FOUND)
+		if (WIN32)
+			SET(EVENT__DISABLE_OPENSSL ON CACHE BOOL "close libevent openssl")				# libevent close openssl in windows
+		endif()
 		SET(EVENT__BUILD_SHARED_LIBRARIES ON CACHE BOOL "build libevent as shared")		# libevent build as static lib		
 		SET(EVENT__DISABLE_SAMPLES ON CACHE BOOL "close libevent example")				# libevent close example
 		SET(EVENT__DISABLE_TESTS ON CACHE BOOL "close libevent test")					# libevent close test
@@ -73,6 +75,21 @@ else()
 		message(FATAL_ERROR "Can't find libevent binary")
 	endif()
 endif()
+
+# muggleCC
+set(MUGGLE_BUILD_ONLY_C OFF)
+set(MUGGLE_BUILD_EXAMPLE OFF)
+set(MUGGLE_BUILD_TEST OFF)
+set(MUGGLE_BUILD_BENCHMARK OFF)
+set(MUGGLE_BUILD_SHARED_LIB OFF)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/thirdparty/muggleCC)
+include_directories(
+	${CMAKE_CURRENT_LIST_DIR}/thirdparty/muggleCC
+)
+set_target_properties(muggleCC
+	PROPERTIES
+	FOLDER "muggle"
+)
 
 # include directories
 include_directories(
@@ -132,6 +149,7 @@ function(add_example name folder)
 endfunction()
 
 if (${CPP_EVENT__BUILD_exmaple})
+	add_example(hello ${CMAKE_CURRENT_LIST_DIR}/example/hello)
 	add_example(echo_server ${CMAKE_CURRENT_LIST_DIR}/example/echo_server)
 	add_example(echo_client ${CMAKE_CURRENT_LIST_DIR}/example/echo_client)
 endif()
