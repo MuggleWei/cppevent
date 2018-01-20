@@ -35,8 +35,8 @@ public:
 	void* getBase();
 
 	// @return 0 if successful, or -1 if an error occurred
-	int tunnelWrite(cppevent::TunnelMsg *arg);
-	void tunnelRead(cppevent::TunnelMsg *arg);
+	int tunnelWrite(cppevent::TunnelMsg *message);
+	void tunnelRead(cppevent::TunnelMsg *message);
 
 private:
 	void stopSync();

@@ -3,6 +3,7 @@ build/
 
 # vim
 *~
+*.swp
 /compile_commands.json
 
 # vscode

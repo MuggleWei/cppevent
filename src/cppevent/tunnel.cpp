@@ -7,7 +7,7 @@
 
 NS_CPPEVENT_BEGIN
 
-static void tunnelcb(struct bufferevent *bev, void *ctx)
+static void tunnelcb(struct bufferevent*, void *ctx)
 {
 	Tunnel *tunnel = (Tunnel*)ctx;
 	tunnel->onTunnelRead();
@@ -16,6 +16,7 @@ static void tunnelcb(struct bufferevent *bev, void *ctx)
 Tunnel::Tunnel(EventLoop *event_loop)
 	: event_loop_(event_loop)
 	, tunnel_{nullptr, nullptr}
+	, enable_write_(true)
 {
 	struct bufferevent *tunnel[2];
 	if (bufferevent_pair_new((struct event_base*)event_loop->getBase(), BEV_OPT_CLOSE_ON_FREE, tunnel) == 0)
@@ -41,6 +42,12 @@ Tunnel::~Tunnel()
 
 int Tunnel::write(void* arg)
 {
+	// std::shared_lock<std::shared_mutex> lock(mtx_);
+	std::unique_lock<std::mutex> lock(mtx_);
+	if (!enable_write_)
+	{
+		return -1;
+	}
 	return bufferevent_write((struct bufferevent*)tunnel_[TUNNEL_IN], &arg, sizeof(arg));
 }
 
@@ -58,11 +65,21 @@ void Tunnel::onTunnelRead()
 
 void Tunnel::openInput()
 {
-	bufferevent_enable((struct bufferevent*)tunnel_[TUNNEL_IN], EV_WRITE);
+	// std::unique_lock<std::shared_mutex> lock(mtx_);
+	std::unique_lock<std::mutex> lock(mtx_);
+	enable_write_ = true;
+
+//	struct evbuffer *input_buf = bufferevent_get_input((struct bufferevent*)tunnel_[TUNNEL_IN]);
+//	evbuffer_unfreeze(input_buf, 0);
 }
 void Tunnel::closeInput()
 {
-	bufferevent_disable((struct bufferevent*)tunnel_[TUNNEL_IN], EV_WRITE);
+	// std::unique_lock<std::shared_mutex> lock(mtx_);
+	std::unique_lock<std::mutex> lock(mtx_);
+	enable_write_ = false;
+
+//	struct evbuffer *input_buf = bufferevent_get_input((struct bufferevent*)tunnel_[TUNNEL_IN]);
+//	evbuffer_freeze(input_buf, 0);
 }
 
 NS_CPPEVENT_END

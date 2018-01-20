@@ -178,12 +178,12 @@ void* EventLoop::getBase()
 	return base_;
 }
 
-int EventLoop::tunnelWrite(cppevent::TunnelMsg *arg)
+int EventLoop::tunnelWrite(cppevent::TunnelMsg *message)
 {
-	int ret = tunnel_->write(arg);
+	int ret = tunnel_->write(message);
 	if (ret < 0)
 	{
-		delete arg;
+		delete message;
 	}
 	return ret;
 }
