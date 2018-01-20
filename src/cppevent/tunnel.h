@@ -18,6 +18,9 @@ public:
 	cppevent_EXPORT int write(void *arg);
 	cppevent_EXPORT void onTunnelRead();
 
+	cppevent_EXPORT void openInput();
+	cppevent_EXPORT void closeInput();
+
 private:
 	enum eTunnelDirection
 	{

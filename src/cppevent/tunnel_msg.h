@@ -2,6 +2,7 @@
 #define CPP_EVENT_TUNNEL_MSG_H_
 
 #include "cppevent/cppevent_def.h"
+#include <iostream>
 #include <future>
 #include "cppevent/timer.h"
 
@@ -52,7 +53,7 @@ public:
 		bool is_once_in,
 		std::promise<cppevent::Timer*> &&promise_in)
 		: TunnelMsg(TunnelMsgType_Timer)
-		, mill_seconds(mill_seconds)
+		, mill_seconds(mill_seconds_in)
 		, fn(std::move(fn_in))
 		, is_once(is_once_in)
 		, promise(std::move(promise_in))

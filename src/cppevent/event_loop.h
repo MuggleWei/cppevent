@@ -2,16 +2,20 @@
 #define CPP_EVENT_EVENT_LOOP_H_
 
 #include "cppevent/cppevent_def.h"
-#include <vector>
+#include <list>
 #include <thread>
 #include <future>
 #include "cppevent/tunnel.h"
 #include "cppevent/timer.h"
+#include "cppevent/tunnel_msg.h"
 
 NS_CPPEVENT_BEGIN
 
 class EventLoop
 {
+public:
+	cppevent_EXPORT static void GlobalClean();
+
 public:
 	cppevent_EXPORT EventLoop();
 	cppevent_EXPORT virtual ~EventLoop();
@@ -30,12 +34,11 @@ public:
 public:
 	void* getBase();
 
-	void tunnelWrite(void *arg);
-	void tunnelRead(void *arg);
+	// @return 0 if successful, or -1 if an error occurred
+	int tunnelWrite(cppevent::TunnelMsg *arg);
+	void tunnelRead(cppevent::TunnelMsg *arg);
 
 private:
-	void clean();
-
 	void stopSync();
 
 	std::future<Timer*> internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once);
@@ -48,7 +51,7 @@ private:
 	std::thread::id thread_id_;
 
 	Tunnel *tunnel_;
-	std::vector<Timer*> timers_;
+	std::list<Timer*> timers_;
 };
 
 NS_CPPEVENT_END

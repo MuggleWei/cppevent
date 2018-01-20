@@ -1,9 +1,11 @@
 #include "event_loop.h"
 #include <signal.h>
+#include <assert.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
 #include <new>
+#include <algorithm>
 #include <stdexcept>
 #include <event2/event.h>
 #include <event2/thread.h>
@@ -71,6 +73,11 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 	}
 }
 
+void EventLoop::GlobalClean()
+{
+	libevent_global_shutdown();
+}
+
 EventLoop::EventLoop()
 	: base_(nullptr)
 	, thread_id_(std::this_thread::get_id())
@@ -92,6 +99,12 @@ EventLoop::EventLoop()
 }
 EventLoop::~EventLoop()
 {
+	if (tunnel_)
+	{
+		delete tunnel_;
+		tunnel_ = nullptr;
+	}
+
 	if (base_)
 	{
 		event_base_free((struct event_base*)base_);
@@ -102,9 +115,20 @@ EventLoop::~EventLoop()
 void EventLoop::run()
 {
 	thread_id_ = std::this_thread::get_id();
+
+	// in default, after constructor, tunnel open input automaticly, this
+	// invoke for the situation that run after stop
+	tunnel_->openInput();
 	event_base_loop((struct event_base*)base_, EVLOOP_NO_EXIT_ON_EMPTY);
 
-	clean();
+	while (timers_.size() > 0)
+	{
+		Timer *p_timer = timers_.front();
+		// Don't use the code below, cause stopTimer will
+		// erase the timer
+		// timers_.pop_front();
+		stopTimer(p_timer);
+	}
 }
 void EventLoop::stop()
 {
@@ -115,7 +139,7 @@ void EventLoop::stop()
 	else
 	{
 		TunnelMsgStop *msg = new TunnelMsgStop();
-		tunnelWrite((void*)msg);
+		tunnelWrite(msg);
 	}
 }
 
@@ -124,7 +148,7 @@ void EventLoop::profileTunnel()
 	cppevent::TunnelMsgProfile *msg = new cppevent::TunnelMsgProfile(0);
 	auto t = std::chrono::system_clock::now().time_since_epoch();
 	msg->microsec = (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(t).count();
-	this->tunnelWrite((void*)msg);
+	tunnelWrite(msg);
 }
 
 std::future<Timer*> EventLoop::addTimer(long mill_seconds, std::function<void()> &&fn)
@@ -145,7 +169,7 @@ void EventLoop::stopTimer(Timer *timer)
 	else
 	{
 		TunnelMsgStopTimer *msg = new TunnelMsgStopTimer(timer);
-		tunnelWrite((void*)msg);
+		tunnelWrite(msg);
 	}
 }
 
@@ -154,13 +178,17 @@ void* EventLoop::getBase()
 	return base_;
 }
 
-void EventLoop::tunnelWrite(void *arg)
+int EventLoop::tunnelWrite(cppevent::TunnelMsg *arg)
 {
-	tunnel_->write(arg);
+	int ret = tunnel_->write(arg);
+	if (ret < 0)
+	{
+		delete arg;
+	}
+	return ret;
 }
-void EventLoop::tunnelRead(void *arg)
+void EventLoop::tunnelRead(cppevent::TunnelMsg *message)
 {
-	TunnelMsg *message = (TunnelMsg*)arg;
 	switch (message->type)
 	{
 	case TunnelMsgType_Profile:
@@ -168,7 +196,8 @@ void EventLoop::tunnelRead(void *arg)
 		std::shared_ptr<TunnelMsgProfile> msg((TunnelMsgProfile*)message);
 		auto t = std::chrono::system_clock::now().time_since_epoch();
 		int64_t diff = (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(t).count() - msg->microsec;
-		std::cout << "use " << diff << " micro seconds" << std::endl;
+
+		std::cout << "message through tunnel use " << diff << " micro seconds" << std::endl;
 	}break;
 	case TunnelMsgType_Stop:
 	{
@@ -189,24 +218,13 @@ void EventLoop::tunnelRead(void *arg)
 	}
 }
 
-void EventLoop::clean()
-{
-	if (tunnel_)
-	{
-		delete tunnel_;
-		tunnel_ = nullptr;
-	}
-
-	for (auto &p_timer : timers_)
-	{
-		stopTimer(p_timer);
-	}
-	timers_.clear();
-}
-
 void EventLoop::stopSync()
 {
-	event_base_loopbreak((struct event_base*)base_);
+	tunnel_->closeInput();
+
+	// NOTE: don't use event_base_break, if still have message in 
+	// tunnel, will lead memory leak
+	event_base_loopexit((struct event_base*)base_, nullptr);
 }
 
 std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once)
@@ -226,7 +244,7 @@ std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function
 			is_once,
 			std::move(promise)
 		);
-		tunnelWrite((void*)msg);
+		tunnelWrite(msg);
 	}
 
 	return future;
@@ -252,8 +270,19 @@ void EventLoop::stopTimerSync(Timer *timer)
 {
 	if (timer)
 	{
-		event_free((struct event*)timer->ev);
-		delete timer;
+		auto it = std::find(timers_.begin(), timers_.end(), timer);
+		if (it != timers_.end())
+		{
+			timers_.erase(it);
+
+			event_free((struct event*)timer->ev);
+			delete timer;
+		}
+		else
+		{
+			// maybe want delete timer twice
+			assert(false);
+		}
 	}
 }
 

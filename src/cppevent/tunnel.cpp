@@ -52,8 +52,17 @@ void Tunnel::onTunnelRead()
 	{
 		void *data;
 		bufferevent_read(bev, &data, sizeof(data));
-		event_loop_->tunnelRead(data);
+		event_loop_->tunnelRead((TunnelMsg*)data);
 	}
+}
+
+void Tunnel::openInput()
+{
+	bufferevent_enable((struct bufferevent*)tunnel_[TUNNEL_IN], EV_WRITE);
+}
+void Tunnel::closeInput()
+{
+	bufferevent_disable((struct bufferevent*)tunnel_[TUNNEL_IN], EV_WRITE);
 }
 
 NS_CPPEVENT_END
