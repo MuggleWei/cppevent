@@ -33,6 +33,8 @@ public:
 		, microsec(m)
 	{}
 
+	std::thread::id thread_id;
+	int message_id;
 	int64_t microsec;
 };
 

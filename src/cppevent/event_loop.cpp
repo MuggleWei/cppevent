@@ -148,6 +148,9 @@ void EventLoop::profileTunnel()
 	cppevent::TunnelMsgProfile *msg = new cppevent::TunnelMsgProfile(0);
 	auto t = std::chrono::system_clock::now().time_since_epoch();
 	msg->microsec = (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(t).count();
+	msg->thread_id = std::this_thread::get_id();
+	static thread_local int s_msg_id = 0;
+	msg->message_id = s_msg_id++;
 	tunnelWrite(msg);
 }
 
@@ -197,7 +200,9 @@ void EventLoop::tunnelRead(cppevent::TunnelMsg *message)
 		auto t = std::chrono::system_clock::now().time_since_epoch();
 		int64_t diff = (int64_t)std::chrono::duration_cast<std::chrono::microseconds>(t).count() - msg->microsec;
 
-		std::cout << "message through tunnel use " << diff << " micro seconds" << std::endl;
+		std::cout << "message(" 
+			<< msg->thread_id << "," 
+			<< msg->message_id << ") through tunnel use " << diff << " micro seconds" << std::endl;
 	}break;
 	case TunnelMsgType_Stop:
 	{

@@ -34,6 +34,13 @@ void run()
 	p_event_loop = &event_loop;
 	signal(SIGINT, sighandler);
 
+	unsigned int n = std::thread::hardware_concurrency();
+	n = n < 2 ? 2 : n;
+	std::cout << "start 1 timer with 500ms interval" << std::endl;
+	std::cout << "start " << n << " threads" << std::endl;
+	std::cout << "sleep for 2 seconds..." << std::endl;
+	std::this_thread::sleep_for(std::chrono::seconds(2));
+
 	std::future<cppevent::Timer*> future = event_loop.addTimer(500, [] {
 		std::cout << "hello" << std::endl;
 	});
@@ -59,8 +66,30 @@ void run()
 		}
 	});
 
+	std::vector<std::thread> threads;
+	for (unsigned int i = 0; i < n; i++)
+	{
+		threads.push_back(std::thread([&event_loop]{
+			while (true)
+			{
+				if (is_done)
+				{
+					break;
+				}
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				event_loop.profileTunnel();
+			}
+		}));
+	}
+
 	event_loop.run();
 	th.join();
+
+	for (unsigned int i = 0; i < n; i++)
+	{
+		threads[i].join();
+	}
 
 	std::cout << "bye byte" << std::endl;
 

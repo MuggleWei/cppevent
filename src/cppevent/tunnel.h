@@ -3,8 +3,6 @@
 
 #include "cppevent/cppevent_def.h"
 #include <mutex>
-#include <shared_mutex>
-#include <thread>
 
 NS_CPPEVENT_BEGIN
 
@@ -34,9 +32,6 @@ private:
 	EventLoop *event_loop_;
 	void *tunnel_[2];
 
-	// nowadays, shared_mutex is not supported by 
-	// most environment, so only use mutex
-	// mutable std::shared_mutex mtx_;
 	std::mutex mtx_;
 	bool enable_write_;
 };
