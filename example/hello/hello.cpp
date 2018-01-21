@@ -78,7 +78,11 @@ void run()
 				}
 
 				std::this_thread::sleep_for(std::chrono::milliseconds(1));
-				event_loop.profileTunnel();
+				int ret = event_loop.profileTunnel();
+				if (ret != 0)
+				{
+					std::cout << "write event loop tunnel failed" << std::endl;
+				}
 			}
 		}));
 	}

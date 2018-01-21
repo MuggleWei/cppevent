@@ -11,13 +11,13 @@ NS_CPPEVENT_BEGIN
 
 typedef muggle::Tunnel<cppevent::TunnelMsg*> EventTunnelType;
 
-static void tunnelcb(evutil_socket_t sock, short which, void *arg)
+static void tunnelcb(evutil_socket_t /*sock*/, short /*which*/, void *arg)
 {
 	EventTunnel *tunnel = (EventTunnel*)arg;
 	tunnel->onRead();
 }
 
-EventTunnel::EventTunnel(cppevent::EventLoop *event_loop)
+EventTunnel::EventTunnel(cppevent::EventLoop *event_loop, unsigned tunnel_buf_size)
 	: event_loop_(event_loop)
 	, event_(nullptr)
 	, tunnel_(nullptr)
@@ -31,7 +31,7 @@ EventTunnel::EventTunnel(cppevent::EventLoop *event_loop)
 	}
 	event_add((struct event*)event_, nullptr);
 
-	auto tunnel = new EventTunnelType();
+	auto tunnel = new EventTunnelType(tunnel_buf_size);
 	if (tunnel == nullptr)
 	{
 		throw std::bad_alloc();

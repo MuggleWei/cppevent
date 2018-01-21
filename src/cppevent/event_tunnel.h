@@ -11,7 +11,7 @@ class EventLoop;
 class EventTunnel
 {
 public:
-	cppevent_EXPORT EventTunnel(EventLoop *event_loop);
+	cppevent_EXPORT EventTunnel(EventLoop *event_loop, unsigned tunnel_buf_size=0);
 	cppevent_EXPORT ~EventTunnel();
 
 	cppevent_EXPORT int write(cppevent::TunnelMsg *arg);

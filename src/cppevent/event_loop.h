@@ -16,14 +16,14 @@ public:
 	cppevent_EXPORT static void GlobalClean();
 
 public:
-	cppevent_EXPORT EventLoop();
+	cppevent_EXPORT EventLoop(unsigned int tunnel_buf_size = 0);
 	cppevent_EXPORT virtual ~EventLoop();
 
 	cppevent_EXPORT void run();
 	cppevent_EXPORT void stop();
 
-	// just for test tunnel profile
-	cppevent_EXPORT void profileTunnel();
+	// just for test tunnel performance 
+	cppevent_EXPORT int profileTunnel();
 
 	cppevent_EXPORT std::future<Timer*> addTimer(long mill_seconds, std::function<void()> &&fn);
 	cppevent_EXPORT std::future<Timer*> addTimerOnce(long mill_seconds, std::function<void()> &&fn);

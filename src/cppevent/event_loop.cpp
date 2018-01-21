@@ -78,7 +78,7 @@ void EventLoop::GlobalClean()
 	libevent_global_shutdown();
 }
 
-EventLoop::EventLoop()
+EventLoop::EventLoop(unsigned int tunnel_buf_size)
 	: base_(nullptr)
 	, thread_id_(std::this_thread::get_id())
 	, event_tunnel_(nullptr)
@@ -91,7 +91,7 @@ EventLoop::EventLoop()
 		throw std::bad_alloc();
 	}
 
-	event_tunnel_ = new EventTunnel(this);
+	event_tunnel_ = new EventTunnel(this, tunnel_buf_size);
 	if (event_tunnel_ == nullptr)
 	{
 		throw std::bad_alloc();
@@ -143,7 +143,7 @@ void EventLoop::stop()
 	}
 }
 
-void EventLoop::profileTunnel()
+int EventLoop::profileTunnel()
 {
 	cppevent::TunnelMsgProfile *msg = new cppevent::TunnelMsgProfile(0);
 	auto t = std::chrono::system_clock::now().time_since_epoch();
@@ -151,7 +151,7 @@ void EventLoop::profileTunnel()
 	msg->thread_id = std::this_thread::get_id();
 	static thread_local int s_msg_id = 0;
 	msg->message_id = s_msg_id++;
-	tunnelWrite(msg);
+	return tunnelWrite(msg);
 }
 
 std::future<Timer*> EventLoop::addTimer(long mill_seconds, std::function<void()> &&fn)
