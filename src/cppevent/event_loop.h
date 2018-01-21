@@ -5,9 +5,8 @@
 #include <list>
 #include <thread>
 #include <future>
-#include "cppevent/tunnel.h"
 #include "cppevent/timer.h"
-#include "cppevent/tunnel_msg.h"
+#include "cppevent/event_tunnel.h"
 
 NS_CPPEVENT_BEGIN
 
@@ -34,7 +33,6 @@ public:
 public:
 	void* getBase();
 
-	// @return 0 if successful, or -1 if an error occurred
 	int tunnelWrite(cppevent::TunnelMsg *message);
 	void tunnelRead(cppevent::TunnelMsg *message);
 
@@ -50,7 +48,7 @@ private:
 	void *base_;
 	std::thread::id thread_id_;
 
-	Tunnel *tunnel_;
+	EventTunnel *event_tunnel_;
 	std::list<Timer*> timers_;
 };
 

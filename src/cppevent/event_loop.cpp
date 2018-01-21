@@ -81,7 +81,7 @@ void EventLoop::GlobalClean()
 EventLoop::EventLoop()
 	: base_(nullptr)
 	, thread_id_(std::this_thread::get_id())
-	, tunnel_(nullptr)
+	, event_tunnel_(nullptr)
 {
 	EventGlobalInit();
 
@@ -91,18 +91,18 @@ EventLoop::EventLoop()
 		throw std::bad_alloc();
 	}
 
-	tunnel_ = new Tunnel(this);
-	if (tunnel_ == nullptr)
+	event_tunnel_ = new EventTunnel(this);
+	if (event_tunnel_ == nullptr)
 	{
 		throw std::bad_alloc();
 	}
 }
 EventLoop::~EventLoop()
 {
-	if (tunnel_)
+	if (event_tunnel_)
 	{
-		delete tunnel_;
-		tunnel_ = nullptr;
+		delete event_tunnel_;
+		event_tunnel_ = nullptr;
 	}
 
 	if (base_)
@@ -118,7 +118,7 @@ void EventLoop::run()
 
 	// in default, after constructor, tunnel open input automaticly, this
 	// invoke for the situation that run after stop
-	tunnel_->openInput();
+	event_tunnel_->open();
 	event_base_loop((struct event_base*)base_, EVLOOP_NO_EXIT_ON_EMPTY);
 
 	while (timers_.size() > 0)
@@ -183,8 +183,8 @@ void* EventLoop::getBase()
 
 int EventLoop::tunnelWrite(cppevent::TunnelMsg *message)
 {
-	int ret = tunnel_->write(message);
-	if (ret < 0)
+	int ret = event_tunnel_->write(message);
+	if (ret != 0)
 	{
 		delete message;
 	}
@@ -225,7 +225,7 @@ void EventLoop::tunnelRead(cppevent::TunnelMsg *message)
 
 void EventLoop::stopSync()
 {
-	tunnel_->closeInput();
+	event_tunnel_->close();
 
 	// NOTE: don't use event_base_break, if still have message in 
 	// tunnel, will lead memory leak
