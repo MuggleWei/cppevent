@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <stdexcept>
 #include <event2/event.h>
+#include <event2/bufferevent.h>
 #include <event2/thread.h>
+#include <event2/listener.h>
 #include "muggle/muggle_cc.h"
 #include "tunnel_msg.h"
 
@@ -73,6 +75,13 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 	}
 }
 
+static void onAccept(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *addr, int socklen, void *arg)
+{
+	// TODO:
+	std::cout << "on accept, to be continued..." << std::endl;
+	evutil_closesocket(fd);
+}
+
 void EventLoop::GlobalClean()
 {
 	libevent_global_shutdown();
@@ -129,6 +138,13 @@ void EventLoop::run()
 		// timers_.pop_front();
 		stopTimer(p_timer);
 	}
+
+	while (listeners_.size() > 0)
+	{
+		struct evconnlistener *listener = (struct evconnlistener*)listeners_.front();
+		evconnlistener_free(listener);
+		listeners_.pop_front();
+	}
 }
 void EventLoop::stop()
 {
@@ -176,6 +192,24 @@ void EventLoop::stopTimer(Timer *timer)
 	}
 }
 
+std::future<int> EventLoop::bindAndListen(const char *addr, int backlog)
+{
+	std::promise<int> promise;
+	std::future<int> future = promise.get_future();
+	if (std::this_thread::get_id() == thread_id_)
+	{
+		int ret = bindAndListenSync(addr, backlog);
+		promise.set_value(ret);
+	}
+	else
+	{
+		TunnelMsgBindAndListen *msg = new TunnelMsgBindAndListen(addr, backlog, std::move(promise));
+		tunnelWrite(msg);
+	}
+	
+	return future;
+}
+
 void* EventLoop::getBase()
 {
 	return base_;
@@ -219,6 +253,12 @@ void EventLoop::tunnelRead(cppevent::TunnelMsg *message)
 	{
 		std::shared_ptr<TunnelMsgStopTimer> msg((TunnelMsgStopTimer*)message);
 		stopTimerSync(msg->timer);
+	}break;
+	case TunnelMsgType_BindAndListen:
+	{
+		std::shared_ptr<TunnelMsgBindAndListen> msg((TunnelMsgBindAndListen*)message);
+		int ret = bindAndListenSync(msg->addr, msg->backlog);
+		msg->promise.set_value(ret);
 	}break;
 	}
 }
@@ -289,6 +329,31 @@ void EventLoop::stopTimerSync(Timer *timer)
 			assert(false);
 		}
 	}
+}
+
+int EventLoop::bindAndListenSync(const char *addr, int backlog)
+{
+	struct sockaddr* sa = nullptr;
+	struct sockaddr_storage ss;
+	int slen = (int)sizeof(ss);
+	memset(&ss, 0, sizeof(ss));
+
+	if (evutil_parse_sockaddr_port(addr, (struct sockaddr*)&ss, &slen) < 0)
+	{
+		return -1;
+	}
+	sa = (struct sockaddr*)&ss;
+
+	struct evconnlistener *listener = evconnlistener_new_bind((struct event_base*)base_, onAccept, (void*)this,
+		LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, backlog,
+		(struct sockaddr*)&ss, slen);
+	if (!listener)
+	{
+		return -1;
+	}
+	listeners_.push_back((void*)listener);
+
+	return 0;
 }
 
 NS_CPPEVENT_END

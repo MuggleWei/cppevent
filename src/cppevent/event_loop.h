@@ -30,6 +30,8 @@ public:
 
 	cppevent_EXPORT void stopTimer(Timer *timer);
 
+	cppevent_EXPORT std::future<int> bindAndListen(const char *addr, int backlog = -1);
+
 public:
 	void* getBase();
 
@@ -44,12 +46,15 @@ private:
 
 	void stopTimerSync(Timer *timer);
 
+	int bindAndListenSync(const char *addr, int backlog = -1);
+
 private:
 	void *base_;
 	std::thread::id thread_id_;
 
 	EventTunnel *event_tunnel_;
 	std::list<Timer*> timers_;
+	std::list<void*> listeners_;
 };
 
 NS_CPPEVENT_END

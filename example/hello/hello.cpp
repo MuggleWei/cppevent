@@ -99,6 +99,39 @@ void run()
 
 	cppevent::EventLoop::GlobalClean();
 }
+void run2()
+{
+	cppevent::EventLoop event_loop;
+
+	p_event_loop = &event_loop;
+	signal(SIGINT, sighandler);
+
+	std::future<int> ret1 = event_loop.bindAndListen("127.0.0.1:9001", 512);
+	if (ret1.get() == 0)
+	{
+		std::cout << "bind and listen in 127.0.0.1:9001" << std::endl;
+	}
+	else
+	{
+		std::cout << "failed bind and listen in 127.0.0.1:9001" << std::endl;
+	}
+
+	std::future<int> ret2 = event_loop.bindAndListen("0.0.0.0:9002", 512);
+	if (ret2.get() == 0)
+	{
+		std::cout << "bind and listen in 0.0.0.0:9002" << std::endl;
+	}
+	else
+	{
+		std::cout << "failed bind and listen in 0.0.0.0:9002" << std::endl;
+	}
+
+	event_loop.run();
+
+	std::cout << "bye byte" << std::endl;
+
+	cppevent::EventLoop::GlobalClean();
+}
 
 int main(int , char **)
 {
@@ -107,7 +140,7 @@ int main(int , char **)
 	detect.Start();
 #endif
 
-	run();
+	run2();
 
 #if WIN32
 	detect.End();

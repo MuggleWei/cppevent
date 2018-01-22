@@ -2,6 +2,7 @@
 #define CPP_EVENT_TUNNEL_MSG_H_
 
 #include "cppevent/cppevent_def.h"
+#include <string.h>
 #include <iostream>
 #include <future>
 #include "cppevent/timer.h"
@@ -14,6 +15,7 @@ enum TunnelMsgType
 	TunnelMsgType_Stop,
 	TunnelMsgType_Timer,
 	TunnelMsgType_StopTimer,
+	TunnelMsgType_BindAndListen,
 };
 
 class TunnelMsg
@@ -76,6 +78,25 @@ public:
 	{}
 
 	cppevent::Timer *timer;
+};
+
+class TunnelMsgBindAndListen : public TunnelMsg
+{
+public:
+	TunnelMsgBindAndListen(
+		const char *addr_in, 
+		int backlog_in, 
+		std::promise<int> &&promise_in)
+		: TunnelMsg(TunnelMsgType_Stop)
+		, backlog(backlog_in)
+		, promise(std::move(promise_in))
+	{
+		strncpy(addr, addr_in, sizeof(addr));
+	}
+
+	char addr[512];
+	int backlog;
+	std::promise<int> promise;
 };
 
 NS_CPPEVENT_END
