@@ -1,0 +1,4 @@
+#ifndef CPP_EVENT_EVENT_HANDLER_H_
+#define CPP_EVENT_EVENT_HANDLER_H_
+
+#endif

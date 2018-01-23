@@ -5,6 +5,9 @@
 #include <string.h>
 #include <iostream>
 #include <future>
+#ifdef WIN32
+#include <WinSock2.h>
+#endif
 #include "cppevent/timer.h"
 
 NS_CPPEVENT_BEGIN
@@ -16,6 +19,7 @@ enum TunnelMsgType
 	TunnelMsgType_Timer,
 	TunnelMsgType_StopTimer,
 	TunnelMsgType_BindAndListen,
+	TunnelMsgType_AcceptConn,
 };
 
 class TunnelMsg
@@ -98,6 +102,28 @@ public:
 	int backlog;
 	std::promise<int> promise;
 };
+
+class TunnelMsgAcceptConn : public TunnelMsg
+{
+public:
+	TunnelMsgAcceptConn(
+		cppevent_socket_t fd_in,
+		struct sockaddr *addr_in,
+		int socklen_in
+		)
+		: TunnelMsg(TunnelMsgType_AcceptConn)
+		, fd(fd_in)
+		, socklen(socklen_in)
+	{
+		memcpy(&addr, addr_in, socklen);
+	}
+
+	cppevent_socket_t fd;
+	struct sockaddr_storage addr;
+	int socklen;
+};
+
+
 
 NS_CPPEVENT_END
 

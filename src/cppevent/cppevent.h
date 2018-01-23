@@ -7,9 +7,7 @@
 #include "cppevent/tunnel_msg.h"
 #include "cppevent/cppevent_def.h"
 #include "cppevent/byte_buf.h"
-#include "cppevent/peer.h"
-#include "cppevent/worker_thread.h"
-#include "cppevent/net_service.h"
-#include "cppevent/net_service_handler.h"
+#include "cppevent/conn.h"
+#include "cppevent/event_handler.h"
 
 #endif

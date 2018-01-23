@@ -6,12 +6,31 @@
 
 NS_CPPEVENT_BEGIN
 
-ByteBuffer::ByteBuffer(void *ev_buf)
-	: ev_buf_(ev_buf)
+ByteBuffer::ByteBuffer()
+	: ev_buf_(nullptr)
 {}
 ByteBuffer::~ByteBuffer()
 {
+	// don't do that, external response to free evbuffer
+//	if (ev_buf_ != nullptr)
+//	{
+//		evbuffer_free((struct evbuffer*)ev_buf_);
+//	}
 	ev_buf_ = nullptr;
+}
+
+void* ByteBuffer::getEvbuf()
+{
+	return ev_buf_;
+}
+void ByteBuffer::setEvbuf(void *evbuf)
+{
+	// don't do that, external response to free evbuffer
+//	if (ev_buf_ != nullptr)
+//	{
+//		evbuffer_free((struct evbuffer*)ev_buf_);
+//	}
+	ev_buf_ = evbuf;
 }
 
 size_t ByteBuffer::GetByteLength()

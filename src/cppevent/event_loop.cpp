@@ -13,6 +13,7 @@
 #include <event2/listener.h>
 #include "muggle/muggle_cc.h"
 #include "tunnel_msg.h"
+#include "byte_buf.h"
 
 NS_CPPEVENT_BEGIN
 
@@ -75,12 +76,52 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 	}
 }
 
-static void onAccept(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *addr, int socklen, void *arg)
+static void readcb(struct bufferevent *bev, void *ctx)
 {
-	// TODO:
-	std::cout << "on accept, to be continued..." << std::endl;
-	evutil_closesocket(fd);
 }
+static void writecb(struct bufferevent *bev, void *ctx)
+{
+}
+static void eventcb(struct bufferevent *bev, short events, void *ctx)
+{
+}
+static void on_accept(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *addr, int socklen, void *arg)
+{
+	EventLoop *event_loop = (EventLoop*)arg;
+	event_loop->onAccept((void*)listener, fd, addr, socklen);
+}
+
+// copy from evutil_format_sockaddr_port_
+static const char* get_sockaddr_port(const struct sockaddr *sa, char *out, size_t outlen)
+{
+	char b[128];
+	const char *res = NULL;
+	int port;
+	if (sa->sa_family == AF_INET) {
+		const struct sockaddr_in *sin = (const struct sockaddr_in*)sa;
+		res = evutil_inet_ntop(AF_INET, &sin->sin_addr, b, sizeof(b));
+		port = ntohs(sin->sin_port);
+		if (res) {
+			evutil_snprintf(out, outlen, "%s:%d", b, port);
+			return out;
+		}
+	}
+	else if (sa->sa_family == AF_INET6) {
+		const struct sockaddr_in6 *sin6 = (const struct sockaddr_in6*)sa;
+		res = evutil_inet_ntop(AF_INET6, &sin6->sin6_addr, b, sizeof(b));
+		port = ntohs(sin6->sin6_port);
+		if (res) {
+			evutil_snprintf(out, outlen, "[%s]:%d", b, port);
+			return out;
+		}
+	}
+
+	evutil_snprintf(out, outlen, "<addr with socktype %d>",
+		(int)sa->sa_family);
+	return out;
+}
+
+
 
 void EventLoop::GlobalClean()
 {
@@ -91,6 +132,7 @@ EventLoop::EventLoop(unsigned int tunnel_buf_size)
 	: base_(nullptr)
 	, thread_id_(std::this_thread::get_id())
 	, event_tunnel_(nullptr)
+	, get_accept_func_(nullptr)
 {
 	EventGlobalInit();
 
@@ -144,6 +186,13 @@ void EventLoop::run()
 		struct evconnlistener *listener = (struct evconnlistener*)listeners_.front();
 		evconnlistener_free(listener);
 		listeners_.pop_front();
+	}
+
+	while (conns_.size() > 0)
+	{
+		auto it = conns_.begin();
+		delete it->first;
+		conns_.erase(it);
 	}
 }
 void EventLoop::stop()
@@ -210,6 +259,30 @@ std::future<int> EventLoop::bindAndListen(const char *addr, int backlog)
 	return future;
 }
 
+void EventLoop::onAccept(void * /*listener*/, cppevent_socket_t fd, struct sockaddr *addr, int socklen)
+{
+	EventLoop *acceptor = this;
+	if (get_accept_func_)
+	{
+		acceptor = get_accept_func_();
+	}
+
+	if (acceptor->thread_id_ == std::this_thread::get_id())
+	{
+		acceptor->onAcceptSync(fd, addr, socklen);
+	}
+	else
+	{
+		TunnelMsgAcceptConn *msg = new TunnelMsgAcceptConn(fd, addr, socklen);
+		tunnelWrite(msg);
+	}
+}
+
+void EventLoop::setAcceptFunc(GetAcceptEventLoopFunc &func)
+{
+	get_accept_func_ = func;
+}
+
 void* EventLoop::getBase()
 {
 	return base_;
@@ -259,6 +332,11 @@ void EventLoop::tunnelRead(cppevent::TunnelMsg *message)
 		std::shared_ptr<TunnelMsgBindAndListen> msg((TunnelMsgBindAndListen*)message);
 		int ret = bindAndListenSync(msg->addr, msg->backlog);
 		msg->promise.set_value(ret);
+	}break;
+	case TunnelMsgType_AcceptConn:
+	{
+		std::shared_ptr<TunnelMsgAcceptConn> msg((TunnelMsgAcceptConn*)message);
+		onAcceptSync(msg->fd, (struct sockaddr*)&msg->addr, msg->socklen);
 	}break;
 	}
 }
@@ -344,7 +422,7 @@ int EventLoop::bindAndListenSync(const char *addr, int backlog)
 	}
 	sa = (struct sockaddr*)&ss;
 
-	struct evconnlistener *listener = evconnlistener_new_bind((struct event_base*)base_, onAccept, (void*)this,
+	struct evconnlistener *listener = evconnlistener_new_bind((struct event_base*)base_, on_accept, (void*)this,
 		LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, backlog,
 		(struct sockaddr*)&ss, slen);
 	if (!listener)
@@ -354,6 +432,30 @@ int EventLoop::bindAndListenSync(const char *addr, int backlog)
 	listeners_.push_back((void*)listener);
 
 	return 0;
+}
+
+void EventLoop::onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int socklen)
+{
+	Conn *new_conn = new Conn();
+	new_conn->container_ = new ConnContainer;
+	new_conn->container_->connptr = std::shared_ptr<Conn>(new_conn);
+
+	struct bufferevent *bev = bufferevent_socket_new((struct event_base*)base_, fd, BEV_OPT_CLOSE_ON_FREE);
+	bufferevent_setcb(bev, readcb, writecb, eventcb, new_conn->container_);
+	bufferevent_enable(bev, EV_READ | EV_WRITE);
+
+	new_conn->event_loop_ = this;
+	new_conn->setBev((void*)bev);
+
+	struct sockaddr_storage local_ss;
+	cppevent_socklen_t local_ss_len = sizeof(local_ss);
+	getsockname(fd, (struct sockaddr*)&local_ss, &local_ss_len);
+	get_sockaddr_port((struct sockaddr*)&local_ss, new_conn->local_addr_, sizeof(new_conn->local_addr_));
+	get_sockaddr_port(addr, new_conn->remote_addr_, sizeof(new_conn->remote_addr_));
+
+	conns_[new_conn->container_] = new_conn->container_->connptr;
+
+	// TODO:
 }
 
 NS_CPPEVENT_END

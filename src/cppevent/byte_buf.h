@@ -8,13 +8,13 @@ NS_CPPEVENT_BEGIN
 
 class ByteBuffer
 {
-	friend class Peer;
-
-private:
-	ByteBuffer(void *ev_buf);
-	virtual ~ByteBuffer();
-
 public:
+	cppevent_EXPORT ByteBuffer();
+	cppevent_EXPORT virtual ~ByteBuffer();
+
+	cppevent_EXPORT void* getEvbuf();
+	cppevent_EXPORT void setEvbuf(void *evbuf);
+	
 	/*
 	 * Returns the total number of bytes stored in the buffer
 	 * @return the number of bytes stored in the peer's buffer

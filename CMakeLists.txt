@@ -158,6 +158,4 @@ endfunction()
 
 if (${CPP_EVENT__BUILD_exmaple})
 	add_example(hello ${CMAKE_CURRENT_LIST_DIR}/example/hello)
-	add_example(echo_server ${CMAKE_CURRENT_LIST_DIR}/example/echo_server)
-	add_example(echo_client ${CMAKE_CURRENT_LIST_DIR}/example/echo_client)
 endif()

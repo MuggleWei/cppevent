@@ -3,12 +3,21 @@
 
 #include "cppevent/cppevent_def.h"
 #include <list>
+#include <map>
 #include <thread>
 #include <future>
+#include <functional>
 #include "cppevent/timer.h"
 #include "cppevent/event_tunnel.h"
+#include "cppevent/conn.h"
+#include "cppevent/event_handler.h"
+
 
 NS_CPPEVENT_BEGIN
+
+class EventLoop;
+
+typedef std::function<EventLoop*()> GetAcceptEventLoopFunc;
 
 class EventLoop
 {
@@ -32,6 +41,9 @@ public:
 
 	cppevent_EXPORT std::future<int> bindAndListen(const char *addr, int backlog = -1);
 
+	cppevent_EXPORT void onAccept(void *listener, cppevent_socket_t fd, struct sockaddr *addr, int socklen);
+	cppevent_EXPORT void setAcceptFunc(GetAcceptEventLoopFunc &func);
+
 public:
 	void* getBase();
 
@@ -48,6 +60,8 @@ private:
 
 	int bindAndListenSync(const char *addr, int backlog = -1);
 
+	void onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int socklen);
+
 private:
 	void *base_;
 	std::thread::id thread_id_;
@@ -55,6 +69,9 @@ private:
 	EventTunnel *event_tunnel_;
 	std::list<Timer*> timers_;
 	std::list<void*> listeners_;
+	std::map<ConnContainer*, std::shared_ptr<Conn>> conns_;
+
+	GetAcceptEventLoopFunc get_accept_func_;
 };
 
 NS_CPPEVENT_END
