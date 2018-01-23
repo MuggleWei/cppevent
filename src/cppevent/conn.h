@@ -7,6 +7,7 @@
 
 NS_CPPEVENT_BEGIN
 
+class EventLoop;
 class Conn;
 struct ConnContainer;
 

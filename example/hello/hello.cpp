@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <iostream>
+#include <vector>
 #include <thread>
 #include <future>
 #include <chrono>
