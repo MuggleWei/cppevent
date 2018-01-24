@@ -452,7 +452,6 @@ void EventLoop::stopTimerSync(Timer *timer)
 
 int EventLoop::bindAndListenSync(const char *addr, int backlog)
 {
-	struct sockaddr* sa = nullptr;
 	struct sockaddr_storage ss;
 	int slen = (int)sizeof(ss);
 	memset(&ss, 0, sizeof(ss));
@@ -461,7 +460,6 @@ int EventLoop::bindAndListenSync(const char *addr, int backlog)
 	{
 		return -1;
 	}
-	sa = (struct sockaddr*)&ss;
 
 	struct evconnlistener *listener = evconnlistener_new_bind((struct event_base*)base_, on_accept, (void*)this,
 		LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, backlog,
@@ -475,7 +473,7 @@ int EventLoop::bindAndListenSync(const char *addr, int backlog)
 	return 0;
 }
 
-void EventLoop::onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int socklen)
+void EventLoop::onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int /*socklen*/)
 {
 	Conn *new_conn = new Conn();
 	new_conn->container_ = new ConnContainer;
