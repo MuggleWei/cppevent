@@ -11,13 +11,13 @@ class Conn;
 class EventHandler
 {
 public:
-	cppevent_EXPORT virtual void connActive(std::shared_ptr<Conn> &connptr) {}
-	cppevent_EXPORT virtual void connInactive(std::shared_ptr<Conn> &connptr) {}
+	cppevent_EXPORT virtual void connActive(std::shared_ptr<Conn>&) {}
+	cppevent_EXPORT virtual void connInactive(std::shared_ptr<Conn>&) {}
 
-	cppevent_EXPORT virtual void connRead(std::shared_ptr<Conn> &connptr) {}
-	cppevent_EXPORT virtual void connWrite(std::shared_ptr<Conn> &connptr) {}
+	cppevent_EXPORT virtual void connRead(std::shared_ptr<Conn>&) {}
+	cppevent_EXPORT virtual void connWrite(std::shared_ptr<Conn>&) {}
 
-	cppevent_EXPORT virtual void connEvent(std::shared_ptr<Conn> &connptr) {}
+	cppevent_EXPORT virtual void connEvent(std::shared_ptr<Conn>&) {}
 };
 
 typedef EventHandler* EventHandlerFactoryFunc();

@@ -94,7 +94,7 @@ static void eventcb(struct bufferevent *bev, short events, void *ctx)
 	EventHandler *handler = conn_container->connptr->getHandler();
 	handler->connEvent(conn_container->connptr);
 
-	if (events == CPPEVENT_EOF || events == CPPEVENT_ERROR)
+	if ((events & CPPEVENT_EOF) || (events & CPPEVENT_ERROR))
 	{
 		EventLoop *event_loop = conn_container->connptr->getLoop();
 		event_loop->delConn(conn_container->connptr);
