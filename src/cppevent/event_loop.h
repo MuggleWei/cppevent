@@ -31,6 +31,8 @@ public:
 	cppevent_EXPORT void run();
 	cppevent_EXPORT void stop();
 
+	cppevent_EXPORT void setHandler(bool shared, EventHandlerFactoryFunc* func);
+
 	// just for test tunnel performance 
 	cppevent_EXPORT int profileTunnel();
 
@@ -43,6 +45,8 @@ public:
 
 	cppevent_EXPORT void onAccept(void *listener, cppevent_socket_t fd, struct sockaddr *addr, int socklen);
 	cppevent_EXPORT void setAcceptFunc(GetAcceptEventLoopFunc &func);
+
+	cppevent_EXPORT void delConn(std::shared_ptr<Conn> &connptr);
 
 public:
 	void* getBase();
@@ -65,6 +69,9 @@ private:
 private:
 	void *base_;
 	std::thread::id thread_id_;
+
+	EventHandler *handler_;
+	EventHandlerFactoryFunc *handler_factory_;
 
 	EventTunnel *event_tunnel_;
 	std::list<Timer*> timers_;

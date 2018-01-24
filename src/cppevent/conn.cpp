@@ -13,6 +13,8 @@ Conn::Conn()
 	: container_(nullptr)
 	, event_loop_(nullptr)
 	, bev_(nullptr)
+	, handler_(nullptr)
+	, shared_handler_(true)
 {}
 Conn::~Conn()
 {
@@ -21,6 +23,15 @@ Conn::~Conn()
 		struct bufferevent *bev = (struct bufferevent*)bev_;
 		bufferevent_free(bev);
 	}
+}
+
+EventHandler* Conn::getHandler()
+{
+	return handler_;
+}
+EventLoop* Conn::getLoop()
+{
+	return event_loop_;
 }
 
 void Conn::setBev(void *bev)

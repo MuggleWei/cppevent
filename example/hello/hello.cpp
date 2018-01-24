@@ -4,6 +4,7 @@
 #include <future>
 #include <chrono>
 #include "cppevent/cppevent.h"
+#include "my_handler.h"
 
 #if WIN32
 #include <muggle/cpp/mem_detect/mem_detect.h>
@@ -26,6 +27,7 @@ void sighandler(int signum)
 		}break;
 	}
 }
+
 
 void run()
 {
@@ -106,6 +108,8 @@ void run2()
 	p_event_loop = &event_loop;
 	signal(SIGINT, sighandler);
 
+	event_loop.setHandler(true, MyHandler::getMyHandler);
+
 	std::future<int> ret1 = event_loop.bindAndListen("127.0.0.1:9001", 512);
 	if (ret1.get() == 0)
 	{
@@ -132,6 +136,7 @@ void run2()
 
 	cppevent::EventLoop::GlobalClean();
 }
+
 
 int main(int , char **)
 {

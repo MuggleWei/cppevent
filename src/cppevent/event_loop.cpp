@@ -78,12 +78,27 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 
 static void readcb(struct bufferevent *bev, void *ctx)
 {
+	ConnContainer *conn_container = (ConnContainer*)ctx;
+	EventHandler *handler = conn_container->connptr->getHandler();
+	handler->connRead(conn_container->connptr);
 }
 static void writecb(struct bufferevent *bev, void *ctx)
 {
+	ConnContainer *conn_container = (ConnContainer*)ctx;
+	EventHandler *handler = conn_container->connptr->getHandler();
+	handler->connWrite(conn_container->connptr);
 }
 static void eventcb(struct bufferevent *bev, short events, void *ctx)
 {
+	ConnContainer *conn_container = (ConnContainer*)ctx;
+	EventHandler *handler = conn_container->connptr->getHandler();
+	handler->connEvent(conn_container->connptr);
+
+	if (events == CPPEVENT_EOF || events == CPPEVENT_ERROR)
+	{
+		EventLoop *event_loop = conn_container->connptr->getLoop();
+		event_loop->delConn(conn_container->connptr);
+	}
 }
 static void on_accept(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *addr, int socklen, void *arg)
 {
@@ -121,8 +136,6 @@ static const char* get_sockaddr_port(const struct sockaddr *sa, char *out, size_
 	return out;
 }
 
-
-
 void EventLoop::GlobalClean()
 {
 	libevent_global_shutdown();
@@ -131,6 +144,8 @@ void EventLoop::GlobalClean()
 EventLoop::EventLoop(unsigned int tunnel_buf_size)
 	: base_(nullptr)
 	, thread_id_(std::this_thread::get_id())
+	, handler_(nullptr)
+	, handler_factory_(nullptr)
 	, event_tunnel_(nullptr)
 	, get_accept_func_(nullptr)
 {
@@ -208,6 +223,18 @@ void EventLoop::stop()
 	}
 }
 
+void EventLoop::setHandler(bool shared, EventHandlerFactoryFunc* func)
+{
+	if (shared)
+	{
+		handler_ = func();
+	}
+	else
+	{
+		handler_factory_ = func;
+	}
+}
+
 int EventLoop::profileTunnel()
 {
 	cppevent::TunnelMsgProfile *msg = new cppevent::TunnelMsgProfile(0);
@@ -281,6 +308,20 @@ void EventLoop::onAccept(void * /*listener*/, cppevent_socket_t fd, struct socka
 void EventLoop::setAcceptFunc(GetAcceptEventLoopFunc &func)
 {
 	get_accept_func_ = func;
+}
+
+void EventLoop::delConn(std::shared_ptr<Conn> &connptr)
+{
+	connptr->handler_->connInactive(connptr);
+	if (!connptr->shared_handler_)
+	{
+		delete connptr->handler_;
+	}
+
+	auto it = conns_.find(connptr->container_);
+	assert(it != conns_.end());
+	delete it->first;
+	conns_.erase(it);
 }
 
 void* EventLoop::getBase()
@@ -455,7 +496,21 @@ void EventLoop::onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int so
 
 	conns_[new_conn->container_] = new_conn->container_->connptr;
 
-	// TODO:
+	if (handler_)
+	{
+		new_conn->handler_ = handler_;
+		new_conn->shared_handler_ = true;
+	}
+	else if (handler_factory_)
+	{
+		new_conn->handler_ = handler_factory_();
+		new_conn->shared_handler_ = false;
+	}
+
+	if (new_conn->handler_)
+	{
+		new_conn->handler_->connActive(new_conn->container_->connptr);
+	}
 }
 
 NS_CPPEVENT_END
