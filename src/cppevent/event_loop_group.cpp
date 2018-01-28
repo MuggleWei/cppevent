@@ -26,19 +26,20 @@ EventLoopGroup::~EventLoopGroup()
 
 void EventLoopGroup::run()
 {
-	if (accept_thread_num_ <= 0 && worker_thread_num_ <= 0)
-	{
-		accept_thread_num_ = 1;
-		worker_thread_num_ = 0;
-	}
-
 	for (int i = 0; i < accept_thread_num_; ++i)
 	{
 		cppevent::GetAcceptEventLoopFunc func = [this]() mutable -> cppevent::EventLoop* {
 			return getWorker();
 		};
 		EventLoop *event_loop = new EventLoop();
-		event_loop->bindAndListen(bind_addr_.c_str(), backlog_);
+		std::future<int> future = event_loop->bindAndListen(bind_addr_.c_str(), backlog_);
+		int ret = future.get();
+		if (ret == -1)
+		{
+			std::cerr << "Failed bind and listen: " << bind_addr_ << std::endl;
+			delete event_loop;
+			return;
+		}
 		event_loop->setHandler(is_shared_handler_, handler_factory_func_);
 		event_loop->setAcceptFunc(func);
 
