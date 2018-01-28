@@ -11,6 +11,8 @@ class Conn;
 class EventHandler
 {
 public:
+	virtual ~EventHandler() {}
+
 	cppevent_EXPORT virtual void connActive(std::shared_ptr<Conn>&) {}
 	cppevent_EXPORT virtual void connInactive(std::shared_ptr<Conn>&) {}
 

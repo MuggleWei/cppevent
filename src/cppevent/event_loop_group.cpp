@@ -59,7 +59,7 @@ void EventLoopGroup::run()
 		}));
 	}
 
-	for (int i = 0; i < threads_.size(); ++i)
+	for (size_t i = 0; i < threads_.size(); ++i)
 	{
 		threads_[i].join();
 	}

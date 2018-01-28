@@ -76,13 +76,13 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 	}
 }
 
-static void readcb(struct bufferevent *bev, void *ctx)
+static void readcb(struct bufferevent* /*bev*/, void *ctx)
 {
 	ConnContainer *conn_container = (ConnContainer*)ctx;
 	EventHandler *handler = conn_container->connptr->getHandler();
 	handler->connRead(conn_container->connptr);
 }
-static void writecb(struct bufferevent *bev, void *ctx)
+static void writecb(struct bufferevent* /*bev*/, void *ctx)
 {
 	ConnContainer *conn_container = (ConnContainer*)ctx;
 	EventHandler *handler = conn_container->connptr->getHandler();
@@ -91,7 +91,7 @@ static void writecb(struct bufferevent *bev, void *ctx)
 		handler->connWrite(conn_container->connptr);
 	}
 }
-static void eventcb(struct bufferevent *bev, short events, void *ctx)
+static void eventcb(struct bufferevent* /*bev*/, short events, void *ctx)
 {
 	ConnContainer *conn_container = (ConnContainer*)ctx;
 	EventHandler *handler = conn_container->connptr->getHandler();
