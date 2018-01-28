@@ -17,7 +17,7 @@ NS_CPPEVENT_BEGIN
 
 class EventLoop;
 
-typedef std::function<EventLoop*()> GetAcceptEventLoopFunc;
+typedef std::function<EventLoop*(void)> GetAcceptEventLoopFunc;
 
 class EventLoop
 {

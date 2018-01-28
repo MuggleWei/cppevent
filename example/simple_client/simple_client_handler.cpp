@@ -12,6 +12,12 @@ void SimpleClientHandler::connActive(std::shared_ptr<cppevent::Conn> &connptr)
 		connptr->getOutputByteBuf().Write(buf, sizeof(buf));
 	});
 }
+void SimpleClientHandler::connInactive(std::shared_ptr<cppevent::Conn> &connptr)
+{
+	std::cout << "conn inactive: "
+		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr()
+		<< std::endl;
+}
 void SimpleClientHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 {
 	char buf[1025];

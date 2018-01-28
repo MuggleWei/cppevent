@@ -5,7 +5,7 @@
 #include <muggle/cpp/mem_detect/mem_detect.h>
 #endif
 
-cppevent::EventLoop *p_event_loop = nullptr;
+cppevent::EventLoopGroup *p_event_loop_group = nullptr;
 void sighandler(int signum)
 {
 	switch (signum)
@@ -13,9 +13,9 @@ void sighandler(int signum)
 	case SIGINT:
 	{
 		std::cout << "\nRecieve signal: SIGINT" << std::endl;
-		if (p_event_loop)
+		if (p_event_loop_group)
 		{
-			p_event_loop->stop();
+			p_event_loop_group->stop();
 		}
 	}break;
 	}
@@ -23,25 +23,18 @@ void sighandler(int signum)
 
 void run()
 {
-	cppevent::EventLoop event_loop;
+	cppevent::EventLoopGroup event_loop_group;
 
-	p_event_loop = &event_loop;
+	p_event_loop_group = &event_loop_group;
 	signal(SIGINT, sighandler);
 
-	event_loop.setHandler(true, EchoServerHandler::getHandler);
-	std::future<int> ret1 = event_loop.bindAndListen("127.0.0.1:10102", 512);
-	if (ret1.get() == 0)
-	{
-		std::cout << "bind and listen in 127.0.0.1:10102" << std::endl;
-	}
-	else
-	{
-		std::cout << "failed bind and listen in 127.0.0.1:10102" << std::endl;
-	}
-
-	event_loop.run();
-
-	std::cout << "bye byte" << std::endl;
+	event_loop_group
+		.acceptNumber(1)
+		.workerNumber(4)
+		.setHandler(true, EchoServerHandler::getHandler)
+		.bind("127.0.0.1:10102")
+		.option(cppevent::CPPEVENT_BACKLOG, 512);
+	event_loop_group.run();
 
 	cppevent::EventLoop::GlobalClean();
 }

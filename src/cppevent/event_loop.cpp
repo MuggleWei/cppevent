@@ -86,7 +86,10 @@ static void writecb(struct bufferevent *bev, void *ctx)
 {
 	ConnContainer *conn_container = (ConnContainer*)ctx;
 	EventHandler *handler = conn_container->connptr->getHandler();
-	handler->connWrite(conn_container->connptr);
+	if (handler)
+	{
+		handler->connWrite(conn_container->connptr);
+	}
 }
 static void eventcb(struct bufferevent *bev, short events, void *ctx)
 {
@@ -337,6 +340,7 @@ void EventLoop::delConn(std::shared_ptr<Conn> &connptr)
 
 	auto it = conns_.find(connptr->container_);
 	assert(it != conns_.end());
+	bufferevent_setcb((struct bufferevent*)it->second->bev_, nullptr, nullptr, nullptr, nullptr);
 	delete it->first;
 	conns_.erase(it);
 }

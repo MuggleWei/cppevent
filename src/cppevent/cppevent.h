@@ -9,5 +9,6 @@
 #include "cppevent/byte_buf.h"
 #include "cppevent/conn.h"
 #include "cppevent/event_handler.h"
+#include "cppevent/event_loop_group.h"
 
 #endif
