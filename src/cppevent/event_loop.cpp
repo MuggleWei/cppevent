@@ -206,15 +206,14 @@ void EventLoop::run()
 	while (conns_.size() > 0)
 	{
 		auto it = conns_.begin();
-		delete it->first;
-		conns_.erase(it);
+		delConn(it->second);
 	}
 }
 void EventLoop::stop()
 {
 	if (std::this_thread::get_id() == thread_id_)
 	{
-		stopSync();
+		syncStop();
 	}
 	else
 	{
@@ -259,7 +258,7 @@ void EventLoop::stopTimer(Timer *timer)
 {
 	if (std::this_thread::get_id() == thread_id_)
 	{
-		stopTimerSync(timer);
+		syncStopTimer(timer);
 	}
 	else
 	{
@@ -274,7 +273,7 @@ std::future<int> EventLoop::bindAndListen(const char *addr, int backlog)
 	std::future<int> future = promise.get_future();
 	if (std::this_thread::get_id() == thread_id_)
 	{
-		int ret = bindAndListenSync(addr, backlog);
+		int ret = syncBindAndListen(addr, backlog);
 		promise.set_value(ret);
 	}
 	else
@@ -296,7 +295,7 @@ void EventLoop::onAccept(void * /*listener*/, cppevent_socket_t fd, struct socka
 
 	if (acceptor->thread_id_ == std::this_thread::get_id())
 	{
-		acceptor->onAcceptSync(fd, addr, socklen);
+		acceptor->syncOnAccept(fd, addr, socklen);
 	}
 	else
 	{
@@ -308,6 +307,24 @@ void EventLoop::onAccept(void * /*listener*/, cppevent_socket_t fd, struct socka
 void EventLoop::setAcceptFunc(GetAcceptEventLoopFunc &func)
 {
 	get_accept_func_ = func;
+}
+
+std::future<std::shared_ptr<Conn>> EventLoop::addConn(const char *addr)
+{
+	std::promise<std::shared_ptr<Conn>> promise;
+	std::future<std::shared_ptr<Conn>> future = promise.get_future();
+	if (std::this_thread::get_id() == thread_id_)
+	{
+		std::shared_ptr<Conn> connptr = syncAddConn(addr);
+		promise.set_value(connptr);
+	}
+	else
+	{
+		TunnelMsgAddConn *msg = new TunnelMsgAddConn(addr, std::move(promise));
+		tunnelWrite(msg);
+	}
+
+	return future;
 }
 
 void EventLoop::delConn(std::shared_ptr<Conn> &connptr)
@@ -355,40 +372,37 @@ void EventLoop::tunnelRead(cppevent::TunnelMsg *message)
 	case TunnelMsgType_Stop:
 	{
 		std::shared_ptr<TunnelMsgStop> msg((TunnelMsgStop*)message);
-		stopSync();
+		syncStop();
 	}break;
 	case TunnelMsgType_Timer:
 	{
 		std::shared_ptr<TunnelMsgAddTimer> msg((TunnelMsgAddTimer*)message);
-		Timer *timer = addTimerSync(msg->mill_seconds, std::move(msg->fn), msg->is_once);
+		Timer *timer = syncAddTimer(msg->mill_seconds, std::move(msg->fn), msg->is_once);
 		msg->promise.set_value(timer);
 	}break;
 	case TunnelMsgType_StopTimer:
 	{
 		std::shared_ptr<TunnelMsgStopTimer> msg((TunnelMsgStopTimer*)message);
-		stopTimerSync(msg->timer);
+		syncStopTimer(msg->timer);
 	}break;
 	case TunnelMsgType_BindAndListen:
 	{
 		std::shared_ptr<TunnelMsgBindAndListen> msg((TunnelMsgBindAndListen*)message);
-		int ret = bindAndListenSync(msg->addr, msg->backlog);
+		int ret = syncBindAndListen(msg->addr, msg->backlog);
 		msg->promise.set_value(ret);
 	}break;
 	case TunnelMsgType_AcceptConn:
 	{
 		std::shared_ptr<TunnelMsgAcceptConn> msg((TunnelMsgAcceptConn*)message);
-		onAcceptSync(msg->fd, (struct sockaddr*)&msg->addr, msg->socklen);
+		syncOnAccept(msg->fd, (struct sockaddr*)&msg->addr, msg->socklen);
+	}break;
+	case TunnelMsgType_AddConn:
+	{
+		std::shared_ptr<TunnelMsgAddConn> msg((TunnelMsgAddConn*)message);
+		std::shared_ptr<Conn> connptr = syncAddConn(msg->addr);
+		msg->promise.set_value(connptr);
 	}break;
 	}
-}
-
-void EventLoop::stopSync()
-{
-	event_tunnel_->close();
-
-	// NOTE: don't use event_base_break, if still have message in 
-	// tunnel, will lead memory leak
-	event_base_loopexit((struct event_base*)base_, nullptr);
 }
 
 std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once)
@@ -397,7 +411,7 @@ std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function
 	std::future<Timer*> future = promise.get_future();
 	if (std::this_thread::get_id() == thread_id_)
 	{
-		Timer *timer = addTimerSync(mill_seconds, std::move(fn), is_once);
+		Timer *timer = syncAddTimer(mill_seconds, std::move(fn), is_once);
 		promise.set_value(timer);
 	}
 	else
@@ -413,7 +427,38 @@ std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function
 
 	return future;
 }
-Timer* EventLoop::addTimerSync(long mill_seconds, std::function<void()> &&fn, bool is_once)
+
+void EventLoop::onNewConn(std::shared_ptr<Conn> &connptr)
+{
+	conns_[connptr->container_] = connptr;
+
+	if (handler_)
+	{
+		connptr->handler_ = handler_;
+		connptr->shared_handler_ = true;
+	}
+	else if (handler_factory_)
+	{
+		connptr->handler_ = handler_factory_();
+		connptr->shared_handler_ = false;
+	}
+
+	if (connptr->handler_)
+	{
+		connptr->handler_->connActive(connptr);
+	}
+}
+
+void EventLoop::syncStop()
+{
+	event_tunnel_->close();
+
+	// NOTE: don't use event_base_break, if still have message in 
+	// tunnel, will lead memory leak
+	event_base_loopexit((struct event_base*)base_, nullptr);
+}
+
+Timer* EventLoop::syncAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once)
 {
 	short events = is_once ? EV_TIMEOUT : EV_TIMEOUT | EV_PERSIST;
 
@@ -430,7 +475,7 @@ Timer* EventLoop::addTimerSync(long mill_seconds, std::function<void()> &&fn, bo
 
 	return timer;
 }
-void EventLoop::stopTimerSync(Timer *timer)
+void EventLoop::syncStopTimer(Timer *timer)
 {
 	if (timer)
 	{
@@ -450,7 +495,7 @@ void EventLoop::stopTimerSync(Timer *timer)
 	}
 }
 
-int EventLoop::bindAndListenSync(const char *addr, int backlog)
+int EventLoop::syncBindAndListen(const char *addr, int backlog)
 {
 	struct sockaddr_storage ss;
 	int slen = (int)sizeof(ss);
@@ -473,7 +518,7 @@ int EventLoop::bindAndListenSync(const char *addr, int backlog)
 	return 0;
 }
 
-void EventLoop::onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int /*socklen*/)
+void EventLoop::syncOnAccept(cppevent_socket_t fd, struct sockaddr *addr, int /*socklen*/)
 {
 	Conn *new_conn = new Conn();
 	new_conn->container_ = new ConnContainer;
@@ -492,23 +537,44 @@ void EventLoop::onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int /*
 	get_sockaddr_port((struct sockaddr*)&local_ss, new_conn->local_addr_, sizeof(new_conn->local_addr_));
 	get_sockaddr_port(addr, new_conn->remote_addr_, sizeof(new_conn->remote_addr_));
 
-	conns_[new_conn->container_] = new_conn->container_->connptr;
+	onNewConn(new_conn->container_->connptr);
+}
 
-	if (handler_)
+std::shared_ptr<Conn> EventLoop::syncAddConn(const char *addr)
+{
+	struct sockaddr_storage remote_ss;
+	int remote_ss_len = (int)sizeof(remote_ss);
+	if (evutil_parse_sockaddr_port(addr, (struct sockaddr*)&remote_ss, &remote_ss_len) < 0)
 	{
-		new_conn->handler_ = handler_;
-		new_conn->shared_handler_ = true;
-	}
-	else if (handler_factory_)
-	{
-		new_conn->handler_ = handler_factory_();
-		new_conn->shared_handler_ = false;
+		return nullptr;
 	}
 
-	if (new_conn->handler_)
+	Conn *new_conn = new Conn();
+	new_conn->container_ = new ConnContainer;
+	new_conn->container_->connptr = std::shared_ptr<Conn>(new_conn);
+
+	struct bufferevent *bev = bufferevent_socket_new((struct event_base*)base_, -1, BEV_OPT_CLOSE_ON_FREE);
+	bufferevent_setcb(bev, readcb, writecb, eventcb, new_conn->container_);
+	bufferevent_enable(bev, EV_READ | EV_WRITE);
+
+	if (bufferevent_socket_connect(bev, (struct sockaddr *)&remote_ss, sizeof(remote_ss)) < 0)
 	{
-		new_conn->handler_->connActive(new_conn->container_->connptr);
+		delete new_conn->container_;
+		return nullptr;
 	}
+
+	new_conn->event_loop_ = this;
+	new_conn->setBev((void*)bev);
+
+	struct sockaddr_storage local_ss;
+	cppevent_socklen_t local_ss_len = sizeof(local_ss);
+	getsockname(bufferevent_getfd(bev), (struct sockaddr*)&local_ss, &local_ss_len);
+	get_sockaddr_port((struct sockaddr*)&local_ss, new_conn->local_addr_, sizeof(new_conn->local_addr_));
+	get_sockaddr_port((struct sockaddr *)&remote_ss, new_conn->remote_addr_, sizeof(new_conn->remote_addr_));
+
+	onNewConn(new_conn->container_->connptr);
+
+	return new_conn->container_->connptr;
 }
 
 NS_CPPEVENT_END

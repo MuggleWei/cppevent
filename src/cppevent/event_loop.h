@@ -46,6 +46,8 @@ public:
 	cppevent_EXPORT void onAccept(void *listener, cppevent_socket_t fd, struct sockaddr *addr, int socklen);
 	cppevent_EXPORT void setAcceptFunc(GetAcceptEventLoopFunc &func);
 
+	cppevent_EXPORT std::future<std::shared_ptr<Conn>> addConn(const char *addr);
+
 	cppevent_EXPORT void delConn(std::shared_ptr<Conn> &connptr);
 
 public:
@@ -55,16 +57,16 @@ public:
 	void tunnelRead(cppevent::TunnelMsg *message);
 
 private:
-	void stopSync();
-
 	std::future<Timer*> internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once);
-	Timer* addTimerSync(long mill_seconds, std::function<void()> &&fn, bool is_once);
 
-	void stopTimerSync(Timer *timer);
+	void onNewConn(std::shared_ptr<Conn> &connptr);
 
-	int bindAndListenSync(const char *addr, int backlog = -1);
-
-	void onAcceptSync(cppevent_socket_t fd, struct sockaddr *addr, int socklen);
+	void syncStop();
+	Timer* syncAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once);
+	void syncStopTimer(Timer *timer);
+	int syncBindAndListen(const char *addr, int backlog = -1);
+	void syncOnAccept(cppevent_socket_t fd, struct sockaddr *addr, int socklen);
+	std::shared_ptr<Conn> syncAddConn(const char *addr);
 
 private:
 	void *base_;

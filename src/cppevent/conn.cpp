@@ -1,13 +1,8 @@
 #include "conn.h"
 #include <event2/bufferevent.h>
+#include "event_loop.h"
 
 NS_CPPEVENT_BEGIN
-
-std::shared_ptr<Conn> Conn::connect(const char *addr)
-{
-	// TODO: 
-	return nullptr;
-}
 
 Conn::Conn()
 	: container_(nullptr)
@@ -32,6 +27,14 @@ EventHandler* Conn::getHandler()
 EventLoop* Conn::getLoop()
 {
 	return event_loop_;
+}
+
+void Conn::close()
+{
+	if (event_loop_ && container_)
+	{
+		event_loop_->delConn(container_->connptr);
+	}
 }
 
 void Conn::setBev(void *bev)

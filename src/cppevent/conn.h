@@ -18,9 +18,6 @@ public:
 	friend class EventLoop;
 
 public:
-	static std::shared_ptr<Conn> connect(const char *addr);
-
-public:
 	cppevent_EXPORT Conn();
 	cppevent_EXPORT ~Conn();
 
@@ -32,6 +29,8 @@ public:
 
 	cppevent_EXPORT EventHandler* getHandler();
 	cppevent_EXPORT EventLoop* getLoop();
+
+	cppevent_EXPORT void close();
 
 protected:
 	void setBev(void *bev);

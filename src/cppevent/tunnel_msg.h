@@ -12,6 +12,8 @@
 
 NS_CPPEVENT_BEGIN
 
+class Conn;
+
 enum TunnelMsgType
 {
 	TunnelMsgType_Profile = 0,
@@ -20,6 +22,7 @@ enum TunnelMsgType
 	TunnelMsgType_StopTimer,
 	TunnelMsgType_BindAndListen,
 	TunnelMsgType_AcceptConn,
+	TunnelMsgType_AddConn,
 };
 
 class TunnelMsg
@@ -123,7 +126,21 @@ public:
 	int socklen;
 };
 
+class TunnelMsgAddConn : public TunnelMsg
+{
+public:
+	TunnelMsgAddConn(
+		const char *addr_in, 
+		std::promise<std::shared_ptr<Conn>> promise_in)
+		: TunnelMsg(TunnelMsgType_AddConn)
+		, promise(std::move(promise_in))
+	{
+		strncpy(addr, addr_in, sizeof(addr));
+	}
 
+	char addr[512];
+	std::promise<std::shared_ptr<Conn>> promise;
+};
 
 NS_CPPEVENT_END
 
