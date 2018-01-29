@@ -14,7 +14,8 @@ void EchoServerHandler::connInactive(std::shared_ptr<cppevent::Conn> &connptr)
 }
 void EchoServerHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 {
-	connptr->getOutputByteBuf().Append(connptr->getInputByteBuf());
+	// connptr->write(connptr->getInputByteBuf());
+	connptr->writeAndClose(connptr->getInputByteBuf());
 }
 
 static EchoServerHandler s_handler;

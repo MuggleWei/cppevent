@@ -89,6 +89,7 @@ static void writecb(struct bufferevent* /*bev*/, void *ctx)
 	if (handler)
 	{
 		handler->connWrite(conn_container->connptr);
+		conn_container->connptr->afterWrite();
 	}
 }
 static void eventcb(struct bufferevent* /*bev*/, short events, void *ctx)

@@ -32,6 +32,18 @@ public:
 
 	cppevent_EXPORT void close();
 
+	cppevent_EXPORT size_t PeekBytes(void *data_out, size_t datalen);
+	cppevent_EXPORT size_t ReadBytes(void *data_out, size_t datalen);
+
+	cppevent_EXPORT int write(void *data_out, size_t datalen);
+	cppevent_EXPORT int write(ByteBuffer& buf);
+	cppevent_EXPORT int write(ByteBuffer& buf, size_t datalen);
+	cppevent_EXPORT int writeAndClose(void *data_out, size_t datalen);
+	cppevent_EXPORT int writeAndClose(ByteBuffer& buf);
+	cppevent_EXPORT int writeAndClose(ByteBuffer& buf, size_t datalen);
+
+	cppevent_EXPORT void afterWrite();
+
 protected:
 	void setBev(void *bev);
 
@@ -49,6 +61,8 @@ protected:
 
 	EventHandler *handler_;
 	bool shared_handler_;
+
+	bool wait_close_;
 };
 
 // for shared ptr Conn compatible with c callback function
