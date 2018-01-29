@@ -1,4 +1,6 @@
 #include <signal.h>
+#include <thread>
+#include <mutex>
 #include "simple_client_handler.h"
 
 #if WIN32
@@ -6,6 +8,8 @@
 #endif
 
 cppevent::EventLoop *p_event_loop = nullptr;
+std::mutex mtx;
+bool is_done = false;
 void sighandler(int signum)
 {
 	switch (signum)
@@ -13,9 +17,11 @@ void sighandler(int signum)
 	case SIGINT:
 	{
 		std::cout << "\nRecieve signal: SIGINT" << std::endl;
+		std::unique_lock<std::mutex> lock(mtx);
 		if (p_event_loop)
 		{
 			p_event_loop->stop();
+			is_done = true;
 		}
 	}break;
 	}
@@ -23,17 +29,30 @@ void sighandler(int signum)
 
 void run()
 {
-	cppevent::EventLoop event_loop;
-	p_event_loop = &event_loop;
-	signal(SIGINT, sighandler);
+	while (true)
+	{
+		signal(SIGINT, sighandler);
 
-	event_loop.setHandler(false, SimpleClientHandler::newClientHandler);
+		cppevent::EventLoop event_loop;
+		event_loop.setHandler(false, SimpleClientHandler::newClientHandler);
+		event_loop.addConn("127.0.0.1:10102");
 
-	event_loop.addConn("127.0.0.1:10102");
-
-	event_loop.run();
-
-	std::cout << "bye byte" << std::endl;
+		{
+			std::unique_lock<std::mutex> lock(mtx);
+			p_event_loop = &event_loop;
+		}
+		event_loop.run();
+		{
+			std::unique_lock<std::mutex> lock(mtx);
+			p_event_loop = nullptr;
+		}
+		
+		if (is_done)
+		{
+			std::cout << "bye byte" << std::endl;
+			break;
+		}
+	}
 
 	cppevent::EventLoop::GlobalClean();
 }
