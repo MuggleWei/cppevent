@@ -39,11 +39,15 @@ void Conn::close()
 	}
 }
 
-size_t Conn::PeekBytes(void *data_out, size_t datalen)
+size_t Conn::getReadableLength()
+{
+	return byte_buf_in_.GetByteLength();
+}
+size_t Conn::peekBytes(void *data_out, size_t datalen)
 {
 	return byte_buf_in_.PeekBytes(data_out, datalen);
 }
-size_t Conn::ReadBytes(void *data_out, size_t datalen)
+size_t Conn::readBytes(void *data_out, size_t datalen)
 {
 	return byte_buf_in_.ReadBytes(data_out, datalen);
 }

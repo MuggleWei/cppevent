@@ -32,8 +32,9 @@ public:
 
 	cppevent_EXPORT void close();
 
-	cppevent_EXPORT size_t PeekBytes(void *data_out, size_t datalen);
-	cppevent_EXPORT size_t ReadBytes(void *data_out, size_t datalen);
+	cppevent_EXPORT size_t getReadableLength();
+	cppevent_EXPORT size_t peekBytes(void *data_out, size_t datalen);
+	cppevent_EXPORT size_t readBytes(void *data_out, size_t datalen);
 
 	cppevent_EXPORT int write(void *data_out, size_t datalen);
 	cppevent_EXPORT int write(ByteBuffer& buf);

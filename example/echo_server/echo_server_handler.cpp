@@ -12,6 +12,7 @@ void EchoServerHandler::connInactive(std::shared_ptr<cppevent::Conn> &connptr)
 		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr()
 		<< std::endl;
 }
+
 void EchoServerHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 {
 	connptr->write(connptr->getInputByteBuf());
