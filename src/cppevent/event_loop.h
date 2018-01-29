@@ -33,6 +33,8 @@ public:
 
 	cppevent_EXPORT void setHandler(bool shared, EventHandlerFactoryFunc* func);
 
+	cppevent_EXPORT void setIdleTimeout(long second);
+
 	// just for test tunnel performance 
 	cppevent_EXPORT int profileTunnel();
 
@@ -55,6 +57,8 @@ public:
 
 	int tunnelWrite(cppevent::TunnelMsg *message);
 	void tunnelRead(cppevent::TunnelMsg *message);
+
+	void idleCheck();
 
 private:
 	std::future<Timer*> internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once);
@@ -81,6 +85,8 @@ private:
 	std::map<ConnContainer*, std::shared_ptr<Conn>> conns_;
 
 	GetAcceptEventLoopFunc get_accept_func_;
+
+	long idle_second_;
 };
 
 NS_CPPEVENT_END

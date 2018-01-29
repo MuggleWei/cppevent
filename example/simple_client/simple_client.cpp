@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <thread>
 #include <mutex>
+#include <chrono>
 #include "simple_client_handler.h"
 
 #if WIN32
@@ -39,6 +40,10 @@ void run()
 
 		{
 			std::unique_lock<std::mutex> lock(mtx);
+			if (is_done)
+			{
+				break;
+			}
 			p_event_loop = &event_loop;
 		}
 		event_loop.run();
@@ -46,13 +51,17 @@ void run()
 			std::unique_lock<std::mutex> lock(mtx);
 			p_event_loop = nullptr;
 		}
-		
+
 		if (is_done)
 		{
-			std::cout << "bye byte" << std::endl;
 			break;
 		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+		std::cout << "try to reconnect..." << std::endl;
 	}
+
+	std::cout << "bye byte" << std::endl;
 
 	cppevent::EventLoop::GlobalClean();
 }

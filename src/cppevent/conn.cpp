@@ -1,4 +1,5 @@
 #include "conn.h"
+#include <event2/event.h>
 #include <event2/bufferevent.h>
 #include "event_loop.h"
 
@@ -75,12 +76,48 @@ int Conn::writeAndClose(ByteBuffer& buf, size_t datalen)
 	return byte_buf_out_.Append(buf, datalen);
 }
 
+void Conn::afterRead()
+{
+	updateLastInTime();
+}
 void Conn::afterWrite()
 {
 	if (wait_close_ && byte_buf_out_.GetByteLength() == 0)
 	{
 		close();
 	}
+	else
+	{
+		updateLastOutTime();
+	}
+}
+
+void Conn::updateLastInTime()
+{
+	struct event_base *base = (struct event_base*)event_loop_->getBase();
+	struct timeval tv;
+	event_base_gettimeofday_cached(base, &tv);
+	last_in_time_ = tv.tv_sec;
+}
+void Conn::updateLastOutTime()
+{
+	struct event_base *base = (struct event_base*)event_loop_->getBase();
+	struct timeval tv;
+	event_base_gettimeofday_cached(base, &tv);
+	last_out_time_ = tv.tv_sec;
+}
+
+long Conn::getLastInTime()
+{
+	return last_in_time_;
+}
+long Conn::getLastOutTime()
+{
+	return last_out_time_;
+}
+long Conn::getLastActiveTime()
+{
+	return last_out_time_ > last_in_time_ ? last_out_time_ : last_in_time_;
 }
 
 void Conn::setBev(void *bev)

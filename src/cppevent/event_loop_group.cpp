@@ -5,6 +5,7 @@ NS_CPPEVENT_BEGIN
 
 EventLoopGroup::EventLoopGroup()
 	: backlog_(128)
+	, idle_second_(0L)
 	, accept_thread_num_(1)
 	, worker_thread_num_(0)
 	, is_shared_handler_(true)
@@ -42,6 +43,7 @@ void EventLoopGroup::run()
 		}
 		event_loop->setHandler(is_shared_handler_, handler_factory_func_);
 		event_loop->setAcceptFunc(func);
+		event_loop->setIdleTimeout(idle_second_);
 
 		acceptors_.push_back(event_loop);
 		threads_.push_back(std::thread([event_loop, this, func]() mutable {
@@ -53,6 +55,7 @@ void EventLoopGroup::run()
 	{
 		EventLoop *event_loop = new EventLoop();
 		event_loop->setHandler(is_shared_handler_, handler_factory_func_);
+		event_loop->setIdleTimeout(idle_second_);
 
 		workers_.push_back(event_loop);
 		threads_.push_back(std::thread([event_loop]() mutable {
@@ -98,6 +101,12 @@ EventLoopGroup& EventLoopGroup::workerNumber(int number)
 EventLoopGroup& EventLoopGroup::bind(const char *addr)
 {
 	bind_addr_ = addr;
+	return *this;
+}
+
+EventLoopGroup& EventLoopGroup::idleTimeout(long second)
+{
+	idle_second_ = second;
 	return *this;
 }
 
@@ -158,7 +167,7 @@ EventLoop* EventLoopGroup::getWorker()
 		{
 			pos = 0;
 		}
-		event_loop = workers_[pos];
+		event_loop = acceptors_[pos];
 	}
 
 	return event_loop;

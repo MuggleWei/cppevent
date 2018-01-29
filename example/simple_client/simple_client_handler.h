@@ -11,6 +11,10 @@ public:
 	virtual void connRead(std::shared_ptr<cppevent::Conn> &connptr) override;
 
 	static cppevent::EventHandler* newClientHandler();
+
+private:
+	cppevent::Timer *timer_;
+	int receive_msg_cnt_;
 };
 
 #endif

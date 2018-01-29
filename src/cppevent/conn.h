@@ -42,7 +42,14 @@ public:
 	cppevent_EXPORT int writeAndClose(ByteBuffer& buf);
 	cppevent_EXPORT int writeAndClose(ByteBuffer& buf, size_t datalen);
 
+	cppevent_EXPORT void afterRead();
 	cppevent_EXPORT void afterWrite();
+
+	cppevent_EXPORT void updateLastInTime();
+	cppevent_EXPORT void updateLastOutTime();
+	cppevent_EXPORT long getLastInTime();
+	cppevent_EXPORT long getLastOutTime();
+	cppevent_EXPORT long getLastActiveTime();
 
 protected:
 	void setBev(void *bev);
@@ -63,6 +70,8 @@ protected:
 	bool shared_handler_;
 
 	bool wait_close_;
+	long last_in_time_;
+	long last_out_time_;
 };
 
 // for shared ptr Conn compatible with c callback function

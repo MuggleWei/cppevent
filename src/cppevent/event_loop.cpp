@@ -76,11 +76,15 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 	}
 }
 
-static void readcb(struct bufferevent* /*bev*/, void *ctx)
+static void readcb(struct bufferevent* bev, void *ctx)
 {
 	ConnContainer *conn_container = (ConnContainer*)ctx;
 	EventHandler *handler = conn_container->connptr->getHandler();
-	handler->connRead(conn_container->connptr);
+	if (handler)
+	{
+		handler->connRead(conn_container->connptr);
+		conn_container->connptr->afterRead();
+	}
 }
 static void writecb(struct bufferevent* /*bev*/, void *ctx)
 {
@@ -152,6 +156,7 @@ EventLoop::EventLoop(unsigned int tunnel_buf_size)
 	, handler_factory_(nullptr)
 	, event_tunnel_(nullptr)
 	, get_accept_func_(nullptr)
+	, idle_second_(0L)
 {
 	EventGlobalInit();
 
@@ -189,6 +194,12 @@ void EventLoop::run()
 	// in default, after constructor, tunnel open input automaticly, this
 	// invoke for the situation that run after stop
 	event_tunnel_->open();
+
+	if (idle_second_ > 0)
+	{
+		addTimer(idle_second_ * 1000, std::bind(&EventLoop::idleCheck, this));
+	}
+
 	event_base_loop((struct event_base*)base_, EVLOOP_NO_EXIT_ON_EMPTY);
 
 	while (timers_.size() > 0)
@@ -236,6 +247,11 @@ void EventLoop::setHandler(bool shared, EventHandlerFactoryFunc* func)
 	{
 		handler_factory_ = func;
 	}
+}
+
+void EventLoop::setIdleTimeout(long second)
+{
+	idle_second_ = second;
 }
 
 int EventLoop::profileTunnel()
@@ -410,6 +426,30 @@ void EventLoop::tunnelRead(cppevent::TunnelMsg *message)
 	}
 }
 
+void EventLoop::idleCheck()
+{
+	struct event_base *base = (struct event_base*)base_;
+	struct timeval tv;
+	event_base_gettimeofday_cached(base, &tv);
+	long current_second = tv.tv_sec;
+
+	std::vector<ConnContainer*> containers;
+	for (auto it = conns_.begin(); it != conns_.end(); ++it)
+	{
+		long last_active_time = it->second->getLastActiveTime();
+		if (current_second - last_active_time > idle_second_)
+		{
+			containers.push_back(it->first);
+		}
+	}
+
+	for (ConnContainer* &container : containers)
+	{
+		auto handler = container->connptr->getHandler();
+		handler->connIdleTimeout(container->connptr);
+	}
+}
+
 std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once)
 {
 	std::promise<Timer*> promise;
@@ -452,6 +492,9 @@ void EventLoop::onNewConn(std::shared_ptr<Conn> &connptr)
 	{
 		connptr->handler_->connActive(connptr);
 	}
+
+	connptr->updateLastInTime();
+	connptr->updateLastOutTime();
 }
 
 void EventLoop::syncStop()
@@ -467,7 +510,7 @@ Timer* EventLoop::syncAddTimer(long mill_seconds, std::function<void()> &&fn, bo
 {
 	short events = is_once ? EV_TIMEOUT : EV_TIMEOUT | EV_PERSIST;
 
-	struct timeval tv = { 0, mill_seconds * 1000 };
+	struct timeval tv = { mill_seconds / 1000, (mill_seconds % 1000) * 1000 };
 	Timer *timer = new Timer;
 	timer->fn = std::move(fn);
 	timer->ev = (void*)event_new((struct event_base*)base_, -1, events, timerCallback, timer);

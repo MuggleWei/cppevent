@@ -20,6 +20,8 @@ public:
 	cppevent_EXPORT virtual void connWrite(std::shared_ptr<Conn>&) {}
 
 	cppevent_EXPORT virtual void connEvent(std::shared_ptr<Conn>&) {}
+
+	cppevent_EXPORT virtual void connIdleTimeout(std::shared_ptr<Conn>&) {}
 };
 
 typedef EventHandler* EventHandlerFactoryFunc();

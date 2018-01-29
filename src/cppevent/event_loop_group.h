@@ -32,6 +32,8 @@ public:
 
 	cppevent_EXPORT EventLoopGroup& bind(const char *addr);
 
+	cppevent_EXPORT EventLoopGroup& idleTimeout(long second);
+
 	cppevent_EXPORT EventLoopGroup& option(int flag, int val);
 
 	cppevent_EXPORT std::future<std::shared_ptr<Conn>> connect(const char *addr);
@@ -45,6 +47,7 @@ private:
 	std::vector<EventLoop*> acceptors_;
 
 	int backlog_;
+	long idle_second_;
 
 	int accept_thread_num_;
 	int worker_thread_num_;

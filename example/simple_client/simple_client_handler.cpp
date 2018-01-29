@@ -7,10 +7,13 @@ void SimpleClientHandler::connActive(std::shared_ptr<cppevent::Conn> &connptr)
 		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr()
 		<< std::endl;
 
-	connptr->getLoop()->addTimer(1000, [this, connptr]() mutable {
+	auto future = connptr->getLoop()->addTimer(1000, [this, connptr]() mutable {
 		char buf[] = "hello";
 		connptr->getOutputByteBuf().Write(buf, sizeof(buf));
 	});
+
+	timer_ = future.get();
+	receive_msg_cnt_ = 0;
 }
 void SimpleClientHandler::connInactive(std::shared_ptr<cppevent::Conn> &connptr)
 {
@@ -36,10 +39,17 @@ void SimpleClientHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 		size_t read_bytes = connptr->getInputByteBuf().ReadBytes(buf, len);
 		if (read_bytes == -1)
 		{
-			fprintf(stderr, "error read!\n");
+			std::cerr << "error read!" << std::endl;
 			return;
 		}
-		fprintf(stdout, "receieve message: %s\n", buf);
+		std::cout << "receive message: " << buf << std::endl;
+
+		if (receive_msg_cnt_++ > 3 && timer_)
+		{
+			std::cout << "stop send message..." << std::endl;
+			connptr->getLoop()->stopTimer(timer_);
+			timer_ = nullptr;
+		}
 	}
 }
 

@@ -33,6 +33,7 @@ void run()
 		.workerNumber(4)
 		.setHandler(true, EchoServerHandler::getHandler)
 		.bind("127.0.0.1:10102")
+		.idleTimeout(5)
 		.option(cppevent::CPPEVENT_BACKLOG, 512);
 	event_loop_group.run();
 
