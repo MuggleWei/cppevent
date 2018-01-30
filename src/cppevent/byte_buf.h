@@ -60,6 +60,12 @@ public:
 	 */
 	cppevent_EXPORT int AppendRef(ByteBuffer& buf);
 
+	/*
+	 * Discard len bytes data in byte buf
+	 * @return 0 on success, -1 on failure
+	 */
+	cppevent_EXPORT int Discard(size_t len);
+
 private:
 	void *ev_buf_;
 };

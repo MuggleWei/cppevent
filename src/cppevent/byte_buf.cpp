@@ -91,4 +91,13 @@ int ByteBuffer::AppendRef(ByteBuffer& buf)
 	return evbuffer_add_buffer_reference((struct evbuffer*)ev_buf_, (struct evbuffer*)buf.ev_buf_);
 }
 
+int ByteBuffer::Discard(size_t len)
+{
+	if (ev_buf_ == nullptr)
+	{
+		return -1;
+	}
+	return evbuffer_drain((struct evbuffer*)ev_buf_, len);
+}
+
 NS_CPPEVENT_END
