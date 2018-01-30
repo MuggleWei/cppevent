@@ -21,7 +21,7 @@ void sighandler(int signum)
 	}
 }
 
-void run()
+void run(int argc, char *argv[])
 {
 	cppevent::EventLoopGroup event_loop_group;
 
@@ -32,22 +32,31 @@ void run()
 		.acceptNumber(1)
 		.workerNumber(4)
 		.setHandler(true, EchoServerHandler::getHandler)
-		.bind("127.0.0.1:10102")
 		.idleTimeout(5)
 		.option(cppevent::CPPEVENT_BACKLOG, 512);
+
+	if (argc == 2)
+	{
+		event_loop_group.bind(argv[1]);
+	}
+	else
+	{
+		event_loop_group.bind("127.0.0.1:10102");
+	}
+
 	event_loop_group.run();
 
 	cppevent::EventLoop::GlobalClean();
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 #if WIN32
 	muggle::DebugMemoryLeakDetect detect;
 	detect.Start();
 #endif
 
-	run();
+	run(argc, argv);
 
 #if WIN32
 	detect.End();

@@ -5,10 +5,6 @@
 #include <vector>
 #include "pressure_client_handler.h"
 
-#if WIN32
-#include <muggle/cpp/mem_detect/mem_detect.h>
-#endif
-
 cppevent::EventLoop *p_event_loop = nullptr;
 void sighandler(int signum)
 {
@@ -25,7 +21,7 @@ void sighandler(int signum)
 	}
 }
 
-void run()
+void run(int argc, char *argv[])
 {
 	cppevent::EventLoop event_loop;
 
@@ -34,7 +30,14 @@ void run()
 
 	event_loop.setHandler(true, PressureClientHandler::getHandler);
 
-	event_loop.addConn("127.0.0.1:10102");
+	if (argc == 2)
+	{
+		event_loop.addConn(argv[1]);
+	}
+	else
+	{
+		event_loop.addConn("127.0.0.1:10102");
+	}
 	
 	event_loop.run();
 
@@ -43,18 +46,9 @@ void run()
 	cppevent::EventLoop::GlobalClean();
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-#if WIN32
-	muggle::DebugMemoryLeakDetect detect;
-	detect.Start();
-#endif
-
-	run();
-
-#if WIN32
-	detect.End();
-#endif
+	run(argc, argv);
 
 	return 0;
 }

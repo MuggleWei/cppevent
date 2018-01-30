@@ -17,16 +17,21 @@ cppevent::EventHandler* PressureClientHandler::getHandler()
 
 void PressureClientHandler::connActive(std::shared_ptr<cppevent::Conn> &connptr)
 {
-	connptr->getLoop()->addTimer(100, [this, connptr] () mutable {
+	std::cout << "conn active: "
+		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr()
+		<< std::endl;
+
+	connptr->getLoop()->addTimer(10, [this, connptr] () mutable {
 		writeMessage(connptr);
 	});
 }
 void PressureClientHandler::connInactive(std::shared_ptr<cppevent::Conn> &connptr)
 {
+	connptr->getLoop()->stop();
 }
 void PressureClientHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 {
-	while (connptr->getReadableLength() > sizeof(PressureMessage))
+	while (connptr->getReadableLength() >= sizeof(PressureMessage))
 	{
 		PressureMessage msg;
 		connptr->readBytes(&msg, sizeof(msg));
@@ -37,7 +42,7 @@ void PressureClientHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 
 		elapseds.push_back(elapsed);
 
-		size_t n = 10;
+		size_t n = 100;
 		if (elapseds.size() > n)
 		{
 			int64_t total_ms = 0;
@@ -51,8 +56,8 @@ void PressureClientHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 				total_ms += t;
 			}
 			int64_t avg = total_ms / elapseds.size();
-			std::cout << "recently " << n << " messages avg elapsed: " << avg << std::endl;
-			std::cout << "recently " << n << " messages max elapsed: " << max_ms << std::endl;
+			std::cout << "recently " << n << " messages avg elapsed: " << avg << " micro seconds" << std::endl;
+			std::cout << "recently " << n << " messages max elapsed: " << max_ms << " micro seconds" << std::endl;
 			elapseds.clear();
 		}
 	}

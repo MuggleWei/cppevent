@@ -102,6 +102,10 @@ static void eventcb(struct bufferevent* /*bev*/, short events, void *ctx)
 	EventHandler *handler = conn_container->connptr->getHandler();
 	handler->connEvent(conn_container->connptr);
 
+	if (events & CPPEVENT_CONNECTED)
+	{
+		handler->connActive(conn_container->connptr);
+	}
 	if ((events & CPPEVENT_EOF) || (events & CPPEVENT_ERROR))
 	{
 		EventLoop *event_loop = conn_container->connptr->getLoop();
@@ -488,11 +492,6 @@ void EventLoop::onNewConn(std::shared_ptr<Conn> &connptr)
 		connptr->shared_handler_ = false;
 	}
 
-	if (connptr->handler_)
-	{
-		connptr->handler_->connActive(connptr);
-	}
-
 	connptr->updateLastInTime();
 	connptr->updateLastOutTime();
 }
@@ -586,6 +585,12 @@ void EventLoop::syncOnAccept(cppevent_socket_t fd, struct sockaddr *addr, int /*
 	get_sockaddr_port(addr, new_conn->remote_addr_, sizeof(new_conn->remote_addr_));
 
 	onNewConn(new_conn->container_->connptr);
+
+	auto handler = new_conn->container_->connptr->getHandler();
+	if (handler)
+	{
+		handler->connActive(new_conn->container_->connptr);
+	}
 }
 
 std::shared_ptr<Conn> EventLoop::syncAddConn(const char *addr)

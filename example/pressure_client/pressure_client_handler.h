@@ -15,7 +15,6 @@ public:
 
 	void writeMessage(std::shared_ptr<cppevent::Conn> &connptr);
 
-
 private:
 	static std::vector<int64_t> elapseds;
 };
