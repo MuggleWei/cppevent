@@ -2,13 +2,13 @@
 
 void EchoServerHandler::connActive(std::shared_ptr<cppevent::Conn> &connptr)
 {
-	std::cout << "conn active: "
+	std::cout << "conn active: [" << std::this_thread::get_id() << "] "
 		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr()
 		<< std::endl;
 }
 void EchoServerHandler::connInactive(std::shared_ptr<cppevent::Conn> &connptr)
 {
-	std::cout << "conn Inactive: "
+	std::cout << "conn Inactive: [" << std::this_thread::get_id() << "] "
 		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr()
 		<< std::endl;
 }

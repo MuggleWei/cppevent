@@ -324,7 +324,7 @@ void EventLoop::onAccept(void * /*listener*/, cppevent_socket_t fd, struct socka
 	else
 	{
 		TunnelMsgAcceptConn *msg = new TunnelMsgAcceptConn(fd, addr, socklen);
-		tunnelWrite(msg);
+		acceptor->tunnelWrite(msg);
 	}
 }
 
