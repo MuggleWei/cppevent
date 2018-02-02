@@ -1,16 +1,16 @@
 #ifndef CPP_EVENT_EVENT_LOOP_H_
 #define CPP_EVENT_EVENT_LOOP_H_
 
-#include "cppevent/cppevent_def.h"
+#include "cppevent/core/cppevent_def.h"
 #include <list>
 #include <map>
 #include <thread>
 #include <future>
 #include <functional>
-#include "cppevent/timer.h"
-#include "cppevent/event_tunnel.h"
-#include "cppevent/conn.h"
-#include "cppevent/event_handler.h"
+#include "cppevent/core/timer.h"
+#include "cppevent/core/event_tunnel.h"
+#include "cppevent/core/conn.h"
+#include "cppevent/core/event_handler.h"
 
 
 NS_CPPEVENT_BEGIN
@@ -22,35 +22,35 @@ typedef std::function<EventLoop*(void)> GetAcceptEventLoopFunc;
 class EventLoop
 {
 public:
-	cppevent_EXPORT static void GlobalClean();
+	cppevent_core_EXPORT static void GlobalClean();
 
 public:
-	cppevent_EXPORT EventLoop(unsigned int tunnel_buf_size = 0);
-	cppevent_EXPORT virtual ~EventLoop();
+	cppevent_core_EXPORT EventLoop(unsigned int tunnel_buf_size = 0);
+	cppevent_core_EXPORT virtual ~EventLoop();
 
-	cppevent_EXPORT void run();
-	cppevent_EXPORT void stop();
+	cppevent_core_EXPORT void run();
+	cppevent_core_EXPORT void stop();
 
-	cppevent_EXPORT void setHandler(bool shared, EventHandlerFactoryFunc* func);
+	cppevent_core_EXPORT void setHandler(bool shared, EventHandlerFactoryFunc* func);
 
-	cppevent_EXPORT void setIdleTimeout(long second);
+	cppevent_core_EXPORT void setIdleTimeout(long second);
 
 	// just for test tunnel performance 
-	cppevent_EXPORT int profileTunnel();
+	cppevent_core_EXPORT int profileTunnel();
 
-	cppevent_EXPORT std::future<Timer*> addTimer(long mill_seconds, std::function<void()> &&fn);
-	cppevent_EXPORT std::future<Timer*> addTimerOnce(long mill_seconds, std::function<void()> &&fn);
+	cppevent_core_EXPORT std::future<Timer*> addTimer(long mill_seconds, std::function<void()> &&fn);
+	cppevent_core_EXPORT std::future<Timer*> addTimerOnce(long mill_seconds, std::function<void()> &&fn);
 
-	cppevent_EXPORT void stopTimer(Timer *timer);
+	cppevent_core_EXPORT void stopTimer(Timer *timer);
 
-	cppevent_EXPORT std::future<int> bindAndListen(const char *addr, int backlog = -1);
+	cppevent_core_EXPORT std::future<int> bindAndListen(const char *addr, int backlog = -1);
 
-	cppevent_EXPORT void onAccept(void *listener, cppevent_socket_t fd, struct sockaddr *addr, int socklen);
-	cppevent_EXPORT void setAcceptFunc(GetAcceptEventLoopFunc &func);
+	cppevent_core_EXPORT void onAccept(void *listener, cppevent_socket_t fd, struct sockaddr *addr, int socklen);
+	cppevent_core_EXPORT void setAcceptFunc(GetAcceptEventLoopFunc &func);
 
-	cppevent_EXPORT std::future<std::shared_ptr<Conn>> addConn(const char *addr);
+	cppevent_core_EXPORT std::future<std::shared_ptr<Conn>> addConn(const char *addr);
 
-	cppevent_EXPORT void delConn(std::shared_ptr<Conn> &connptr);
+	cppevent_core_EXPORT void delConn(std::shared_ptr<Conn> &connptr);
 
 public:
 	void* getBase();

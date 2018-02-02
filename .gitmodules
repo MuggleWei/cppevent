@@ -4,3 +4,6 @@
 [submodule "thirdparty/muggleCC"]
 	path = thirdparty/muggleCC
 	url = https://github.com/MuggleWei/muggleCC.git
+[submodule "thirdparty/google/protobuf"]
+	path = thirdparty/google/protobuf
+	url = https://github.com/google/protobuf.git

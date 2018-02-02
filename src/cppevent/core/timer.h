@@ -1,7 +1,7 @@
 #ifndef CPP_EVENT_TIMER_H_
 #define CPP_EVENT_TIMER_H_
 
-#include "cppevent/cppevent_def.h"
+#include "cppevent/core/cppevent_def.h"
 #include <functional>
 
 NS_CPPEVENT_BEGIN

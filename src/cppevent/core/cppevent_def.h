@@ -8,14 +8,14 @@
 #endif
 
 // windows export macro
-#if WIN32 && defined(cppevent_USE_DLL)
-	#ifdef cppevent_EXPORTS
-		#define cppevent_EXPORT __declspec(dllexport)
+#if WIN32 && defined(cppevent_core_USE_DLL)
+	#ifdef cppevent_core_EXPORTS
+		#define cppevent_core_EXPORT __declspec(dllexport)
 	#else
-		#define cppevent_EXPORT __declspec(dllimport)
+		#define cppevent_core_EXPORT __declspec(dllimport)
 	#endif
 #else
-	#define cppevent_EXPORT
+	#define cppevent_core_EXPORT
 #endif
 
 // namespace

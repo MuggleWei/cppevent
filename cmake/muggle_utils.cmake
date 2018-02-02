@@ -111,7 +111,7 @@ function(muggle_add_project_with_folders name root_folder type folders)
 	set(h_files "")
 
 	# ensure all folder in folders is subpath of root_folder
-	foreach(folder ${folders})
+	foreach(folder ${folders})	
 		file(RELATIVE_PATH rel_path ${root_folder} ${folder})
 		if (${rel_path} MATCHES "^\\.\\.")
 			message(FATAL_ERROR "${folder} is not the sub path of the ${root_folder}")

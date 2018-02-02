@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package gen.proto;
+
+message Position {
+	float x = 1;
+	float y = 2;
+	float z = 3;
+}
+
+message Rotation {
+	float x_axis = 1;
+	float y_axis = 2;
+	float z_axis = 3;
+}
+
+message Scale {
+	float x_scale = 1;
+	float y_scale = 2;
+	float z_scale = 3;
+}
+
+message Transform {
+	Position position = 1;
+	Rotation rotation = 2;
+	Scale scale = 3;
+}

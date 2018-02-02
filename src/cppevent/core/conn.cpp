@@ -2,6 +2,7 @@
 #include <event2/event.h>
 #include <event2/bufferevent.h>
 #include "event_loop.h"
+#include "endian.h"
 
 NS_CPPEVENT_BEGIN
 
@@ -79,6 +80,91 @@ int Conn::writeAndClose(ByteBuffer& buf, size_t datalen)
 	wait_close_ = true;
 	return byte_buf_out_.Append(buf, datalen);
 }
+
+int16_t Conn::peekInt16()
+{
+	int16_t val;
+	byte_buf_in_.PeekBytes(&val, sizeof(val));
+	return CPPEVENT_NTOH_16(val);
+}
+int32_t Conn::peekInt32()
+{
+	int32_t val;
+	byte_buf_in_.PeekBytes(&val, sizeof(val));
+	return CPPEVENT_NTOH_32(val);
+}
+int64_t Conn::peekInt64()
+{
+	int64_t val;
+	byte_buf_in_.PeekBytes(&val, sizeof(val));
+	return CPPEVENT_NTOH_64(val);
+}
+float Conn::peekFloat()
+{
+	float val;
+	byte_buf_in_.PeekBytes(&val, sizeof(val));
+	return val;
+}
+double Conn::peekDouble()
+{
+	double val;
+	byte_buf_in_.PeekBytes(&val, sizeof(val));
+	return val;
+}
+int16_t Conn::readInt16()
+{
+	int16_t val;
+	byte_buf_in_.ReadBytes(&val, sizeof(val));
+	return CPPEVENT_NTOH_16(val);
+}
+int32_t Conn::readInt32()
+{
+	int32_t val;
+	byte_buf_in_.ReadBytes(&val, sizeof(val));
+	return CPPEVENT_NTOH_32(val);
+}
+int64_t Conn::readInt64()
+{
+	int64_t val;
+	byte_buf_in_.ReadBytes(&val, sizeof(val));
+	return CPPEVENT_NTOH_64(val);
+}
+float Conn::readFloat()
+{
+	float val;
+	byte_buf_in_.ReadBytes(&val, sizeof(val));
+	return val;
+}
+double Conn::readDouble()
+{
+	double val;
+	byte_buf_in_.ReadBytes(&val, sizeof(val));
+	return val;
+}
+int Conn::writeInt16(int16_t val)
+{
+	val = CPPEVENT_HTON_16(val);
+	return byte_buf_out_.Write(&val, sizeof(val));
+}
+int Conn::writeInt32(int32_t val)
+{
+	val = CPPEVENT_HTON_32(val);
+	return byte_buf_out_.Write(&val, sizeof(val));
+}
+int Conn::writeInt64(int64_t val)
+{
+	val = CPPEVENT_HTON_64(val);
+	return byte_buf_out_.Write(&val, sizeof(val));
+}
+int Conn::writeFloat(float val)
+{
+	return byte_buf_out_.Write(&val, sizeof(val));
+}
+int Conn::writeDouble(double val)
+{
+	return byte_buf_out_.Write(&val, sizeof(val));
+}
+
 
 void Conn::afterRead()
 {

@@ -1,14 +1,14 @@
 #ifndef CPP_EVENT_TUNNEL_MSG_H_
 #define CPP_EVENT_TUNNEL_MSG_H_
 
-#include "cppevent/cppevent_def.h"
+#include "cppevent/core/cppevent_def.h"
 #include <string.h>
 #include <iostream>
 #include <future>
 #ifdef WIN32
 #include <WinSock2.h>
 #endif
-#include "cppevent/timer.h"
+#include "cppevent/core/timer.h"
 
 NS_CPPEVENT_BEGIN
 
