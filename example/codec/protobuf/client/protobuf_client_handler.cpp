@@ -44,4 +44,6 @@ void ProtobufClientHandler::connActive(ConnPtr &connptr)
 	});
 }
 void ProtobufClientHandler::connInactive(ConnPtr &connptr)
-{}
+{
+	connptr->getLoop()->stop();
+}

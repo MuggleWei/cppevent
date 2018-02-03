@@ -3,14 +3,12 @@
 
 #include "cppevent_def.h"
 
-// static union
-// {
-// 	char c[4];
-// 	unsigned long l;
-// }endian_test = { { 1, 0, 0, 0 } };
-// #define CPPEVENT_IS_LITTLE_ENDIAN ((char)endian_test.l)
-
-#define CPPEVENT_IS_LITTLE_ENDIAN 1
+static union
+{
+	char c[4];
+	unsigned long l;
+}endian_test = { { 1, 0, 0, 0 } };
+#define CPPEVENT_IS_LITTLE_ENDIAN ((char)endian_test.l)
 
 #define CPPEVENT_REVERSE_ENDIAN_16(val) \
 ((((val) & 0x00FF) << 8) | \

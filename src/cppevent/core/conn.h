@@ -32,12 +32,44 @@ public:
 
 	cppevent_core_EXPORT void close();
 
+	/*
+	 * get readable byte length in input byte buffer
+	 */
 	cppevent_core_EXPORT size_t getReadableLength();
+	/*
+	 * get datalen bytes in input byte buffer and leave the buffer unchanged
+	 * @data_out: the destination byte array to store the result
+	 * @data_len: the maximum size of the destination byte array
+	 * @RETURN: the number of bytes read, or -1 represent failed
+	 */
 	cppevent_core_EXPORT size_t peekBytes(void *data_out, size_t datalen);
+	/*
+	 * get datalen bytes in input byte buffer and draining the bytes from the source buffer
+	 * @data_out: the destination byte array to store the result
+	 * @data_len: the maximum size of the destination byte array
+	 * @RETURN: the number of bytes read, or -1 represent failed
+	 */
 	cppevent_core_EXPORT size_t readBytes(void *data_out, size_t datalen);
 	
+	/*
+	 * write data into output byte buffer
+	 * @data_out: the byte array
+	 * @datalen: the number of bytes to be copied into output byte buffer
+	 * @RETURN: 0 if successful, or -1 if an error occurred
+	 */
 	cppevent_core_EXPORT int write(void *data_out, size_t datalen);
+	/*
+	 * Move data from anthoer ByteBuffer into output byte buffer of this conn
+	 * @buf: the source byte buffer
+	 * @RETURN: 0 if successful, or -1 if an error occurred
+	 */
 	cppevent_core_EXPORT int write(ByteBuffer& buf);
+	/*
+	 * Move datalen number of bytes from anthoer ByteBuffer into output byte buffer of this conn
+	 * @buf: the source byte buffer
+	 * @datalen: the number of bytes want to move
+	 * @RETURN: 0 if successful, or -1 if an error occurred
+	 */
 	cppevent_core_EXPORT int write(ByteBuffer& buf, size_t datalen);
 	cppevent_core_EXPORT int writeAndClose(void *data_out, size_t datalen);
 	cppevent_core_EXPORT int writeAndClose(ByteBuffer& buf);

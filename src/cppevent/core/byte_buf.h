@@ -34,7 +34,7 @@ public:
 	cppevent_core_EXPORT size_t ReadBytes(void *data_out, size_t datalen);
 
 	/*
-	 * Write data into peer, if invoke thread is the same thread
+	 * Write data into byte buffer, if invoke thread is the same thread
 	 * as the peer owner thread (e.g. in the handler callback),
 	 * then it's safe to write. otherwise, user need ensure thread
 	 * safe by user self
