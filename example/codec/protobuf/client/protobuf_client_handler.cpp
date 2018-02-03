@@ -14,9 +14,6 @@ void ProtobufClientHandler::connActive(ConnPtr &connptr)
 		<< std::endl;
 
 	connptr->getLoop()->addTimer(2000, [this, connptr]() mutable {
-		int32_t len;
-		char *bytes = nullptr;
-
 		Transform transform;
 		Position &position = *transform.mutable_position();
 		Rotation &rotation = *transform.mutable_rotation();

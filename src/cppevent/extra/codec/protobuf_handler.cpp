@@ -6,8 +6,15 @@ void ProtobufHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 {
 	while (true)
 	{
+		size_t readable_len = connptr->getReadableLength();
+		std::cout << "connRead: " << readable_len << std::endl;
+		if (readable_len < 4)
+		{
+			break;
+		}
+
 		int32_t total_len = connptr->peekInt32();
-		if (total_len > connptr->getReadableLength())
+		if (total_len > (int32_t)readable_len)
 		{
 			break;
 		}
@@ -20,6 +27,8 @@ void ProtobufHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 		if (message == nullptr)
 		{
 			std::cerr << "error decode: " << err << std::endl;
+			connptr->close();
+			break;
 		}
 
 		std::shared_ptr<google::protobuf::Message> msg(message);
