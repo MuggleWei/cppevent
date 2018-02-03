@@ -47,6 +47,18 @@ public:
 	ProtobufDispatch()
 		: default_callback_(nullptr)
 	{}
+	~ProtobufDispatch()
+	{
+		if (default_callback_)
+		{
+			delete default_callback_;
+		}
+
+		for (auto it = callbacks_.begin(); it != callbacks_.end(); ++it)
+		{
+			delete it->second;
+		}
+	}
 
 	template<typename T>
 	void RegisterDefault(const std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>& callback)
