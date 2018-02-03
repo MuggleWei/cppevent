@@ -7,7 +7,6 @@ void ProtobufHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 	while (true)
 	{
 		size_t readable_len = connptr->getReadableLength();
-		std::cout << "connRead: " << readable_len << std::endl;
 		if (readable_len < 4)
 		{
 			break;
