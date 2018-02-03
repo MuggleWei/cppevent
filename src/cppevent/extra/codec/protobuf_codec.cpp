@@ -1,7 +1,7 @@
 #include "protobuf_codec.h"
 #include <string.h>
 #include <google/protobuf/io/coded_stream.h>
-#include "cppevent/core/endian.h"
+#include "cppevent/core/cppevent_endian.h"
 
 NS_CPPEVENT_BEGIN
 

@@ -10,6 +10,6 @@
 #include "cppevent/core/conn.h"
 #include "cppevent/core/event_handler.h"
 #include "cppevent/core/event_loop_group.h"
-#include "cppevent/core/endian.h"
+#include "cppevent/core/cppevent_endian.h"
 
 #endif

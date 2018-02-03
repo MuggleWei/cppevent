@@ -3,12 +3,11 @@
 
 #include "cppevent_def.h"
 
-static union
-{
-	char c[4];
-	unsigned long l;
-}endian_test = { { 1, 0, 0, 0 } };
-#define CPPEVENT_IS_LITTLE_ENDIAN ((char)endian_test.l)
+NS_CPPEVENT_BEGIN
+
+cppevent_core_EXPORT bool isLittleEndian();
+
+NS_CPPEVENT_END
 
 #define CPPEVENT_REVERSE_ENDIAN_16(val) \
 ((((val) & 0x00FF) << 8) | \
@@ -31,13 +30,13 @@ static union
 (((val) & 0xFF00000000000000) >> 56))
 
 #define CPPEVENT_HTON_16(val) \
-(CPPEVENT_IS_LITTLE_ENDIAN ? CPPEVENT_REVERSE_ENDIAN_16(val) : (val))
+(cppevent::isLittleEndian() ? CPPEVENT_REVERSE_ENDIAN_16(val) : (val))
 
 #define CPPEVENT_HTON_32(val) \
-(CPPEVENT_IS_LITTLE_ENDIAN ? CPPEVENT_REVERSE_ENDIAN_32(val) : (val))
+(cppevent::isLittleEndian() ? CPPEVENT_REVERSE_ENDIAN_32(val) : (val))
 
 #define CPPEVENT_HTON_64(val) \
-(CPPEVENT_IS_LITTLE_ENDIAN ? CPPEVENT_REVERSE_ENDIAN_64(val) : (val))
+(cppevent::isLittleEndian() ? CPPEVENT_REVERSE_ENDIAN_64(val) : (val))
 
 #define CPPEVENT_NTOH_16(val) CPPEVENT_HTON_16(val)
 #define CPPEVENT_NTOH_32(val) CPPEVENT_HTON_32(val)

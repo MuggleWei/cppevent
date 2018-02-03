@@ -2,7 +2,7 @@
 #include <event2/event.h>
 #include <event2/bufferevent.h>
 #include "event_loop.h"
-#include "endian.h"
+#include "cppevent_endian.h"
 
 NS_CPPEVENT_BEGIN
 

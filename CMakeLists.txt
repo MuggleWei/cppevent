@@ -175,14 +175,13 @@ endif()
 
 # cppevent extra
 muggle_add_project(cppevent_extra ${CMAKE_CURRENT_LIST_DIR}/src/cppevent/extra ${CPP_EVENT__BUILD_TYPE})
-target_link_libraries(cppevent_extra
-	event_core
-)
 if (USE_PROTOBUF_WITH_SOURCE)
 	target_link_libraries(cppevent_extra
 		libprotobuf
+		cppevent_core
 	)
 	add_dependencies(cppevent_extra
+		cppevent_core
 		libprotobuf
 		libprotobuf-lite
 		libprotoc
@@ -192,6 +191,7 @@ if (USE_PROTOBUF_WITH_SOURCE)
 else()
 	target_link_libraries(cppevent_extra
 		protobuf
+		cppevent_core
 	)
 endif()
 
