@@ -8,7 +8,10 @@
 
 typedef std::shared_ptr<cppevent::Conn> ConnPtr;
 
-class ProtobufClientHandler : public cppevent::EventHandler
+using namespace google::protobuf;
+using namespace gen::proto;
+
+class ProtobufClientHandler : public cppevent::ProtobufHandler
 {
 public:
 	static EventHandler* getHandler()
@@ -22,8 +25,7 @@ public:
 	virtual void connActive(ConnPtr &connptr) override;
 	virtual void connInactive(ConnPtr &connptr) override;
 
-private:
-	cppevent::ProtobufCodec codec_;
+	void OnTransform(ConnPtr &connptr, std::shared_ptr<Transform> &msg);
 };
 
 
