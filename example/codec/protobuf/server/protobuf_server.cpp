@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
 
 	event_loop_group.run();
 
+	google::protobuf::ShutdownProtobufLibrary();
 	cppevent::EventLoop::GlobalClean();
 
 	return 0;

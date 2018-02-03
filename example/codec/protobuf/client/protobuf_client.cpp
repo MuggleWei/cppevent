@@ -39,6 +39,7 @@ void run(int argc, char *argv[])
 
 	std::cout << "bye byte" << std::endl;
 
+	google::protobuf::ShutdownProtobufLibrary();
 	cppevent::EventLoop::GlobalClean();
 }
 
