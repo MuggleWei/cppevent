@@ -28,6 +28,8 @@ void ProtobufClientPressureHandler::connInactive(ConnPtr &connptr)
 	std::cout << "disconnected: "
 		<< connptr->getLocalAddr() << " <-->" << connptr->getRemoteAddr()
 		<< std::endl;
+
+	connptr->getLoop()->stop();
 }
 void ProtobufClientPressureHandler::OnTimeRecord(ConnPtr &connptr, std::shared_ptr<TimeRecord> &msg)
 {
