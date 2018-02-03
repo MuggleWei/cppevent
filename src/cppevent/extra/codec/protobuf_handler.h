@@ -26,15 +26,15 @@ public:
 	cppevent_extra_EXPORT void write(std::shared_ptr<cppevent::Conn> &connptr, const google::protobuf::Message *message);
 
 	template<typename T>
-	void handleFunc(const std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>& callback)
+	void handleFunc(std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>&& callback)
 	{
-		dispatch_.Register<T>(callback);
+		dispatch_.Register<T>(std::move(callback));
 	}
 
 	template<typename T>
-	void defaultHandleFunc(const std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>& callback)
+	void defaultHandleFunc(std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>&& callback)
 	{
-		dispatch_.RegisterDefault(callback);
+		dispatch_.RegisterDefault(std::move(callback));
 	}
 
 protected:

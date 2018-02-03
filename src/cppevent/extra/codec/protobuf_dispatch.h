@@ -16,6 +16,7 @@ class ProtobufDispatch
 	class MessageCallback
 	{
 	public:
+		virtual ~MessageCallback() {}
 		virtual void OnMessage(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<google::protobuf::Message> &msg) {}
 	};
 
@@ -25,9 +26,9 @@ class ProtobufDispatch
 		typedef std::function<void(std::shared_ptr<cppevent::Conn>&, std::shared_ptr<T>&)> callbackFunc;
 
 	public:
-		TMessageCallback(const callbackFunc& callback)
+		TMessageCallback(callbackFunc&& callback)
 			: MessageCallback()
-			, callback_(callback)
+			, callback_(std::move(callback))
 		{}
 
 		virtual void OnMessage(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<google::protobuf::Message> &msg)
@@ -61,21 +62,21 @@ public:
 	}
 
 	template<typename T>
-	void RegisterDefault(const std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>& callback)
+	void RegisterDefault(std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>&& callback)
 	{
 		if (default_callback_)
 		{
 			delete(default_callback_);
 		}
-		default_callback_ = new TMessageCallback<T>(callback);
+		default_callback_ = new TMessageCallback<T>(std::move(callback));
 	}
 
 	template<typename T>
-	void Register(const std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>& callback)
+	void Register(std::function<void(std::shared_ptr<cppevent::Conn> &connptr, std::shared_ptr<T>&)>&& callback)
 	{
-		TMessageCallback<T> *tcallback = new TMessageCallback<T>(callback);
+		TMessageCallback<T> *tcallback = new TMessageCallback<T>(std::move(callback));
 		std::string msg_type_name = T::descriptor()->full_name();
-		callbacks_.insert(std::pair<std::string, MessageCallback*>(msg_type_name, tcallback));
+		callbacks_.insert(std::pair<std::string, MessageCallback*>(msg_type_name, std::move(tcallback)));
 	}
 
 	template<typename T>
