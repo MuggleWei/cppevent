@@ -3,6 +3,7 @@
 #include <google/protobuf/message.h>
 #include "cppevent/cppevent.h"
 #include "gen/gameobject.pb.h"
+#include "gen/timerecord.pb.h"
 
 using namespace google::protobuf;
 using namespace gen::proto;
@@ -68,6 +69,10 @@ void OnTransform(ConnPtr &connptr, std::shared_ptr<Transform> &msg)
 
 	handler.write(connptr, msg.get());
 }
+void OnTimeRecord(ConnPtr &connptr, std::shared_ptr<TimeRecord> &msg)
+{
+	handler.write(connptr, msg.get());
+}
 
 int main(int argc, char *argv[])
 {
@@ -80,6 +85,7 @@ int main(int argc, char *argv[])
 	handler.handleFunc<Position>(CPPEVENT_PROTOBUF_HANDLE_FUNC(OnPosition));
 	handler.handleFunc<Rotation>(CPPEVENT_PROTOBUF_HANDLE_FUNC(OnRotation));
 	handler.handleFunc<Transform>(CPPEVENT_PROTOBUF_HANDLE_FUNC(OnTransform));
+	handler.handleFunc<TimeRecord>(CPPEVENT_PROTOBUF_HANDLE_FUNC(OnTimeRecord));
 
 	event_loop_group
 		.acceptNumber(1)

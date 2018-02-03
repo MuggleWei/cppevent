@@ -236,13 +236,18 @@ function(add_example_mul_folder name root_folder folders)
 endfunction(add_example_mul_folder)
 
 if (${CPP_EVENT__BUILD_exmaple})
+	# core example
 	add_example(echo_server ${CMAKE_CURRENT_LIST_DIR}/example/echo_server)
 	add_example(simple_client ${CMAKE_CURRENT_LIST_DIR}/example/simple_client)
 	add_example(pressure_client ${CMAKE_CURRENT_LIST_DIR}/example/pressure_client)
 	
+	# protobuf example
 	set(protobuf_server_folders "${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf/server" "${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf/gen")
 	add_example_mul_folder(protobuf_server ${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf "${protobuf_server_folders}")
 	
 	set(protobuf_client_folders "${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf/client" "${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf/gen")
 	add_example_mul_folder(protobuf_client ${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf "${protobuf_client_folders}")
+	
+	set(protobuf_client_pressure_folders "${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf/client_pressure" "${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf/gen")
+	add_example_mul_folder(protobuf_client_pressure ${CMAKE_CURRENT_LIST_DIR}/example/codec/protobuf "${protobuf_client_pressure_folders}")
 endif()

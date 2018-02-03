@@ -1,5 +1,5 @@
 #include <signal.h>
-#include "protobuf_client_handler.h"
+#include "protobuf_client_pressure_handler.h"
 
 cppevent::EventLoop *p_event_loop = nullptr;
 void sighandler(int signum)
@@ -24,7 +24,7 @@ void run(int argc, char *argv[])
 	p_event_loop = &event_loop;
 	signal(SIGINT, sighandler);
 
-	event_loop.setHandler(false, ProtobufClientHandler::getHandler);
+	event_loop.setHandler(false, ProtobufClientPressureHandler::getHandler);
 
 	if (argc == 2)
 	{
