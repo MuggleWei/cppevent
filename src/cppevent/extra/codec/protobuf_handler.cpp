@@ -2,6 +2,16 @@
 
 NS_CPPEVENT_BEGIN
 
+void ProtobufHandler::connActive(std::shared_ptr<cppevent::Conn> &connptr)
+{
+	std::cout << "connected: " 
+		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr() << std::endl;
+}
+void ProtobufHandler::connInactive(std::shared_ptr<cppevent::Conn> &connptr)
+{
+	std::cout << "disconnected: "
+		<< connptr->getLocalAddr() << " <--> " << connptr->getRemoteAddr() << std::endl;
+}
 void ProtobufHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 {
 	while (true)
@@ -13,6 +23,12 @@ void ProtobufHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 		}
 
 		int32_t total_len = connptr->peekInt32();
+		int32_t limited_len = codec_.getMaxTotalLen();
+		if (limited_len != 0 && total_len > limited_len)
+		{
+			connptr->close();
+			break;
+		}
 		if (total_len > (int32_t)readable_len)
 		{
 			break;
@@ -25,7 +41,6 @@ void ProtobufHandler::connRead(std::shared_ptr<cppevent::Conn> &connptr)
 		free(byte);
 		if (message == nullptr)
 		{
-			std::cerr << "error decode: " << err << std::endl;
 			connptr->close();
 			break;
 		}

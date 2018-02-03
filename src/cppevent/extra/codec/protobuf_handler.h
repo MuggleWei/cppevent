@@ -19,8 +19,13 @@ NS_CPPEVENT_BEGIN
 class ProtobufHandler : public cppevent::EventHandler
 {
 public:
+	cppevent_extra_EXPORT ProtobufHandler(int32_t max_total_len = 0, int32_t max_name_len = 0)
+		: codec_(max_total_len, max_name_len)
+	{}
 	cppevent_extra_EXPORT virtual ~ProtobufHandler() {}
 
+	cppevent_extra_EXPORT virtual void connActive(std::shared_ptr<cppevent::Conn> &connptr) override;
+	cppevent_extra_EXPORT virtual void connInactive(std::shared_ptr<cppevent::Conn> &connptr) override;
 	cppevent_extra_EXPORT virtual void connRead(std::shared_ptr<cppevent::Conn> &connptr) override;
 
 	cppevent_extra_EXPORT void write(std::shared_ptr<cppevent::Conn> &connptr, const google::protobuf::Message *message);

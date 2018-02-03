@@ -40,6 +40,9 @@ public:
 	 */
 	cppevent_extra_EXPORT google::protobuf::Message* decode(const char *bytes, int32_t &total_len, eDecodeError &err);
 
+	cppevent_extra_EXPORT int32_t getMaxTotalLen();
+	cppevent_extra_EXPORT int32_t getMaxNameLen();
+
 private:
 	int32_t max_total_len_; // max total length of byte array, <= 0 represent unlimited
 	int32_t max_name_len_;  // max name lenght of message full name, <= 0 represent unlimited

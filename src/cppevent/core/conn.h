@@ -30,7 +30,16 @@ public:
 	cppevent_core_EXPORT EventHandler* getHandler();
 	cppevent_core_EXPORT EventLoop* getLoop();
 
+	/*
+	 * mark this conn need to closed, will real close it after
+	 * callback function
+	 */
 	cppevent_core_EXPORT void close();
+	/*
+	 * close this conn immediatly, don't invoke this function in
+	 * callback functions
+	 */
+	cppevent_core_EXPORT void shutdown();
 
 	/*
 	 * get readable byte length in input byte buffer

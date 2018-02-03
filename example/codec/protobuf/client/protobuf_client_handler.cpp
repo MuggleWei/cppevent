@@ -2,6 +2,7 @@
 #include <iostream>
 
 ProtobufClientHandler::ProtobufClientHandler()
+	: cppevent::ProtobufHandler(102400, 128)
 {
 	handleFunc<Transform>(CPPEVENT_PROTOBUF_HANDLE_MEMFUNC(&ProtobufClientHandler::OnTransform, this));
 }

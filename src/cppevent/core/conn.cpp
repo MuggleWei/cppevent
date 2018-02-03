@@ -34,6 +34,10 @@ EventLoop* Conn::getLoop()
 
 void Conn::close()
 {
+	wait_close_ = true;
+}
+void Conn::shutdown()
+{
 	if (event_loop_ && container_)
 	{
 		event_loop_->delConn(container_->connptr);
@@ -67,17 +71,17 @@ int Conn::write(ByteBuffer& buf, size_t datalen)
 }
 int Conn::writeAndClose(void *data_out, size_t datalen)
 {
-	wait_close_ = true;
+	close();
 	return byte_buf_out_.Write(data_out, datalen);
 }
 int Conn::writeAndClose(ByteBuffer& buf)
 {
-	wait_close_ = true;
+	close();
 	return byte_buf_out_.Append(buf);
 }
 int Conn::writeAndClose(ByteBuffer& buf, size_t datalen)
 {
-	wait_close_ = true;
+	close();
 	return byte_buf_out_.Append(buf, datalen);
 }
 
@@ -168,13 +172,20 @@ int Conn::writeDouble(double val)
 
 void Conn::afterRead()
 {
-	updateLastInTime();
+	if (wait_close_)
+	{
+		shutdown();
+	}
+	else
+	{
+		updateLastInTime();
+	}
 }
 void Conn::afterWrite()
 {
 	if (wait_close_ && byte_buf_out_.GetByteLength() == 0)
 	{
-		close();
+		shutdown();
 	}
 	else
 	{

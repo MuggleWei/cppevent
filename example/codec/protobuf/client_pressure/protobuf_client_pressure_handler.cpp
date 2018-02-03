@@ -2,6 +2,7 @@
 #include <chrono>
 
 ProtobufClientPressureHandler::ProtobufClientPressureHandler()
+	: cppevent::ProtobufHandler(102400, 128)
 {
 	handleFunc<TimeRecord>(CPPEVENT_PROTOBUF_HANDLE_MEMFUNC(&ProtobufClientPressureHandler::OnTimeRecord, this));
 }
@@ -43,7 +44,7 @@ void ProtobufClientPressureHandler::OnTimeRecord(ConnPtr &connptr, std::shared_p
 	}
 
 	size_t n = 100;
-	if (elapseds.size() > n)
+	if (elapseds.size() >= n)
 	{
 		int64_t total_ms = 0;
 		int64_t max_ms = 0;

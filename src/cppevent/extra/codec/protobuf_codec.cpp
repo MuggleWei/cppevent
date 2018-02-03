@@ -135,4 +135,13 @@ google::protobuf::Message* ProtobufCodec::decode(const char *bytes, int32_t &tot
 	return msg;
 }
 
+int32_t ProtobufCodec::getMaxTotalLen()
+{
+	return max_total_len_;
+}
+int32_t ProtobufCodec::getMaxNameLen()
+{
+	return max_name_len_;
+}
+
 NS_CPPEVENT_END

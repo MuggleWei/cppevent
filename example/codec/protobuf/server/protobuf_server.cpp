@@ -26,7 +26,7 @@ void sighandler(int signum)
 	}
 }
 
-static cppevent::ProtobufHandler handler;
+static cppevent::ProtobufHandler handler(102400, 128);
 cppevent::EventHandler* getProtobufHandler()
 {
 	return &handler;
