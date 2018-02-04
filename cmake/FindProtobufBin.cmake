@@ -1,4 +1,4 @@
-set(PROTOBUF_PATH CACHE PATH "The directory of libevent")
+set(PROTOBUF_PATH CACHE PATH "The directory of protobuf")
 set(PROTOBUF_SEARCH_PATH /usr/local ${PROTOBUF_PATH})
 
 FIND_PATH(PROTOBUF_INCLUDE_DIR

@@ -8,6 +8,13 @@ project(cppevent)
 # set compile parameter
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wall -Wextra -std=c++1z")
+	#	# tcmalloc
+	#	include(${CMAKE_CURRENT_LIST_DIR}/cmake/FindTCMallocBin.cmake)
+	#	if (TCMallocBin_FOUND)
+	#		message("-- found tcmalloc: ", ${TCMALLOC_LIBS})
+	#		link_directories(${TCMALLOC_LIB_DIR})
+	#		add_definitions(-ltcmalloc)
+	#	endif()
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wall -Wextra -Wno-missing-field-initializers")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
@@ -17,11 +24,11 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
 	add_definitions(-DNOMINMAX)
 endif()
 
-# detect c++ features
-message("Your C++ compiler supports these C++ features:")
-foreach(i ${CMAKE_CXX_COMPILE_FEATURES})
-	message("${i}")
-endforeach()
+# # detect c++ features
+# message("Your C++ compiler supports these C++ features:")
+# foreach(i ${CMAKE_CXX_COMPILE_FEATURES})
+# 	message("${i}")
+# endforeach()
 
 # include cmake
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/muggle_utils.cmake)

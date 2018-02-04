@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <memory>
+#include <thread>
 #include <google/protobuf/message.h>
 #include "cppevent/cppevent.h"
 #include "gen/gameobject.pb.h"
@@ -87,9 +88,12 @@ int main(int argc, char *argv[])
 	handler.handleFunc<Transform>(CPPEVENT_PROTOBUF_HANDLE_FUNC(OnTransform));
 	handler.handleFunc<TimeRecord>(CPPEVENT_PROTOBUF_HANDLE_FUNC(OnTimeRecord));
 
+	int hardware_n = (int)std::thread::hardware_concurrency();
+	int worker_number = hardware_n <= 0 ? 4 : 2 * hardware_n;
+
 	event_loop_group
 		.acceptNumber(1)
-		.workerNumber(4)
+		.workerNumber(worker_number)
 		.setHandler(true, getProtobufHandler)
 		.idleTimeout(5)
 		.option(cppevent::CPPEVENT_BACKLOG, 512);
