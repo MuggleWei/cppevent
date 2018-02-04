@@ -76,8 +76,13 @@ static void timerCallback(evutil_socket_t fd, short events, void *args)
 	}
 }
 
-static void readcb(struct bufferevent* bev, void *ctx)
+static void readcb(struct bufferevent* /*bev*/, void *ctx)
 {
+#ifndef NDEBUG
+	static thread_local std::vector<int64_t> accu;
+	auto start = std::chrono::high_resolution_clock::now();
+#endif
+
 	ConnContainer *conn_container = (ConnContainer*)ctx;
 	EventHandler *handler = conn_container->connptr->getHandler();
 	if (handler)
@@ -85,6 +90,31 @@ static void readcb(struct bufferevent* bev, void *ctx)
 		handler->connRead(conn_container->connptr);
 		conn_container->connptr->afterRead();
 	}
+
+#ifndef NDEBUG
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+	accu.push_back(elapsed);
+
+	size_t n = 1000;
+	if (accu.size() == n)
+	{
+		int64_t total = 0, max = 0;
+		for (auto &t : accu)
+		{
+			total += t;
+			if (t > max)
+			{
+				max = t;
+			}
+		}
+		accu.clear();
+
+		std::cout << "recently " << n << ":" << std::endl;
+		std::cout << "avg: " << total / n << std::endl;
+		std::cout << "max: " << max << std::endl;
+	}
+#endif
 }
 static void writecb(struct bufferevent* /*bev*/, void *ctx)
 {

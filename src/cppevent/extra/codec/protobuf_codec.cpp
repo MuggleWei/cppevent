@@ -1,5 +1,6 @@
 #include "protobuf_codec.h"
 #include <string.h>
+#include <assert.h>
 #include <google/protobuf/io/coded_stream.h>
 #include "cppevent/core/cppevent_endian.h"
 
@@ -16,6 +17,9 @@ static google::protobuf::Message* CreateProtoMessage(const std::string &message_
 	return google::protobuf::MessageFactory::generated_factory()->GetPrototype(desc)->New();
 }
 
+#define PRE_ALLOC_NAME_BUF 1024
+static thread_local char threadlocal_name_buf[PRE_ALLOC_NAME_BUF] = {0};
+
 ProtobufCodec::ProtobufCodec(int32_t max_total_len, int32_t max_name_len)
 	: max_total_len_(max_total_len)
 	, max_name_len_(max_name_len)
@@ -27,6 +31,10 @@ ProtobufCodec::ProtobufCodec(int32_t max_total_len, int32_t max_name_len)
 	if (max_name_len_ < 0)
 	{
 		max_name_len_ = 0;
+	}
+	if (max_name_len_ >= (int32_t)sizeof(threadlocal_name_buf))
+	{
+		max_name_len_ = sizeof(threadlocal_name_buf) - 1;
 	}
 }
 
@@ -85,12 +93,12 @@ google::protobuf::Message* ProtobufCodec::decode(const char *bytes, int32_t &tot
 
 	// name len
 	int32_t name_len = CPPEVENT_NTOH_32(*(int32_t*)p);
-	if (name_len <= 0 || (max_name_len_ != 0 && name_len > max_name_len_))
+	if (name_len <= 0 || name_len > max_name_len_)
 	{
 		err = eDecodeError::DecodeError_BeyondNameLenLimit;
 		return nullptr;
 	}
-	if (name_len > total_len - sizeof(int32_t) * 2)
+	if (name_len > (int32_t)(total_len - sizeof(int32_t) * 2))
 	{
 		err = eDecodeError::DecodeError_WrongLen;
 		return nullptr;
@@ -98,12 +106,10 @@ google::protobuf::Message* ProtobufCodec::decode(const char *bytes, int32_t &tot
 	p += sizeof(int32_t);
 
 	// name
-	char *name = (char*)malloc(name_len + 1);
-	memcpy(name, p, name_len);
-	name[name_len] = '\0';
+	memcpy(threadlocal_name_buf, p, name_len);
+	threadlocal_name_buf[name_len] = '\0';
 
-	google::protobuf::Message *msg = CreateProtoMessage(name);
-	free(name);
+	google::protobuf::Message *msg = CreateProtoMessage(threadlocal_name_buf);
 	if (msg == nullptr)
 	{
 		err = eDecodeError::DecodeError_FailedCreateMessage;
