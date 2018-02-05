@@ -191,6 +191,7 @@ EventLoop::EventLoop(unsigned int tunnel_buf_size)
 	, event_tunnel_(nullptr)
 	, get_accept_func_(nullptr)
 	, idle_second_(0L)
+	, flag_(0)
 {
 	EventGlobalInit();
 
@@ -281,6 +282,11 @@ void EventLoop::setHandler(bool shared, EventHandlerFactoryFunc* func)
 	{
 		handler_factory_ = func;
 	}
+}
+
+void EventLoop::setFlag(int flag)
+{
+	flag_ = flag;
 }
 
 void EventLoop::setIdleTimeout(long second)
@@ -484,6 +490,20 @@ void EventLoop::idleCheck()
 	}
 }
 
+int EventLoop::getListenFlag()
+{
+	int listen_flag = 0;
+	if (flag_ & CPPEVENT_FLAG_REUSEADDR)
+	{
+		listen_flag |= LEV_OPT_REUSEABLE;
+	}
+	if (flag_ & CPPEVENT_FLAG_REUSEPORT)
+	{
+		listen_flag |= LEV_OPT_REUSEABLE_PORT;
+	}
+	return listen_flag;
+}
+
 std::future<Timer*> EventLoop::internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once)
 {
 	std::promise<Timer*> promise;
@@ -583,8 +603,9 @@ int EventLoop::syncBindAndListen(const char *addr, int backlog)
 		return -1;
 	}
 
+	int listen_flag = getListenFlag();
 	struct evconnlistener *listener = evconnlistener_new_bind((struct event_base*)base_, on_accept, (void*)this,
-		LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, backlog,
+		LEV_OPT_CLOSE_ON_FREE | listen_flag, backlog,
 		(struct sockaddr*)&ss, slen);
 	if (!listener)
 	{

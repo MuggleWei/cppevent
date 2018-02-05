@@ -13,7 +13,7 @@ NS_CPPEVENT_BEGIN
 
 enum eEventLoopOption
 {
-	CPPEVENT_BACKLOG = 0x01,
+	CPPEVENT_OPTION_BACKLOG = 0x01,
 };
 
 class EventLoopGroup
@@ -36,6 +36,8 @@ public:
 
 	cppevent_core_EXPORT EventLoopGroup& option(int flag, int val);
 
+	cppevent_core_EXPORT EventLoopGroup& flag(int flag);
+
 	cppevent_core_EXPORT std::future<std::shared_ptr<Conn>> connect(const char *addr);
 
 private:
@@ -47,6 +49,7 @@ private:
 	std::vector<EventLoop*> acceptors_;
 
 	int backlog_;
+	int flag_;
 	long idle_second_;
 
 	int accept_thread_num_;

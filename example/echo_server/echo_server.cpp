@@ -33,7 +33,8 @@ void run(int argc, char *argv[])
 		.workerNumber(4)
 		.setHandler(true, EchoServerHandler::getHandler)
 		.idleTimeout(5)
-		.option(cppevent::CPPEVENT_BACKLOG, 512);
+		.option(cppevent::CPPEVENT_OPTION_BACKLOG, 512)
+		.flag(cppevent::CPPEVENT_FLAG_REUSEPORT | cppevent::CPPEVENT_FLAG_REUSEADDR);
 
 	if (argc == 2)
 	{

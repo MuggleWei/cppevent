@@ -5,6 +5,7 @@ NS_CPPEVENT_BEGIN
 
 EventLoopGroup::EventLoopGroup()
 	: backlog_(128)
+	, flag_(0)
 	, idle_second_(0L)
 	, accept_thread_num_(1)
 	, worker_thread_num_(0)
@@ -33,6 +34,7 @@ void EventLoopGroup::run()
 			return getWorker();
 		};
 		EventLoop *event_loop = new EventLoop();
+		event_loop->setFlag(flag_);
 		std::future<int> future = event_loop->bindAndListen(bind_addr_.c_str(), backlog_);
 		int ret = future.get();
 		if (ret == -1)
@@ -54,6 +56,7 @@ void EventLoopGroup::run()
 	for (int i = 0; i < worker_thread_num_; ++i)
 	{
 		EventLoop *event_loop = new EventLoop();
+		event_loop->setFlag(flag_);
 		event_loop->setHandler(is_shared_handler_, handler_factory_func_);
 		event_loop->setIdleTimeout(idle_second_);
 
@@ -114,13 +117,19 @@ EventLoopGroup& EventLoopGroup::option(int flag, int val)
 {
 	switch (flag)
 	{
-	case CPPEVENT_BACKLOG:
+	case CPPEVENT_OPTION_BACKLOG:
 	{
 		backlog_ = val;
 	}break;
 	default:
 		break;
 	}
+	return *this;
+}
+
+EventLoopGroup& EventLoopGroup::flag(int flag)
+{
+	flag_ = flag;
 	return *this;
 }
 

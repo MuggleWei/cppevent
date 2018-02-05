@@ -19,6 +19,12 @@ class EventLoop;
 
 typedef std::function<EventLoop*(void)> GetAcceptEventLoopFunc;
 
+enum eEventLoopFlag
+{
+	CPPEVENT_FLAG_REUSEADDR = 0x01,
+	CPPEVENT_FLAG_REUSEPORT = 0x02,
+};
+
 class EventLoop
 {
 public:
@@ -32,6 +38,8 @@ public:
 	cppevent_core_EXPORT void stop();
 
 	cppevent_core_EXPORT void setHandler(bool shared, EventHandlerFactoryFunc* func);
+
+	cppevent_core_EXPORT void setFlag(int flag);
 
 	cppevent_core_EXPORT void setIdleTimeout(long second);
 
@@ -61,6 +69,8 @@ public:
 	void idleCheck();
 
 private:
+	int getListenFlag();
+
 	std::future<Timer*> internalAddTimer(long mill_seconds, std::function<void()> &&fn, bool is_once);
 
 	void onNewConn(std::shared_ptr<Conn> &connptr);
@@ -87,6 +97,8 @@ private:
 	GetAcceptEventLoopFunc get_accept_func_;
 
 	long idle_second_;
+
+	int flag_;
 };
 
 NS_CPPEVENT_END
