@@ -13,6 +13,7 @@ Conn::Conn()
 	, handler_(nullptr)
 	, shared_handler_(true)
 	, wait_close_(false)
+	, wait_write_close_(false)
 {}
 Conn::~Conn()
 {
@@ -71,17 +72,17 @@ int Conn::write(ByteBuffer& buf, size_t datalen)
 }
 int Conn::writeAndClose(void *data_out, size_t datalen)
 {
-	close();
+	wait_write_close_ = true;
 	return byte_buf_out_.Write(data_out, datalen);
 }
 int Conn::writeAndClose(ByteBuffer& buf)
 {
-	close();
+	wait_write_close_ = true;
 	return byte_buf_out_.Append(buf);
 }
 int Conn::writeAndClose(ByteBuffer& buf, size_t datalen)
 {
-	close();
+	wait_write_close_ = true;
 	return byte_buf_out_.Append(buf, datalen);
 }
 
@@ -183,7 +184,7 @@ void Conn::afterRead()
 }
 void Conn::afterWrite()
 {
-	if (wait_close_ && byte_buf_out_.GetByteLength() == 0)
+	if ((wait_write_close_ || wait_close_) && byte_buf_out_.GetByteLength() == 0)
 	{
 		shutdown();
 	}

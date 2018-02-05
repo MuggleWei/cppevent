@@ -160,6 +160,7 @@ protected:
 	bool shared_handler_;
 
 	bool wait_close_;
+	bool wait_write_close_;
 	long last_in_time_;
 	long last_out_time_;
 };
