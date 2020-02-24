@@ -1,5 +1,10 @@
 # cppevent
 
+Obsolete!
+A few years later, I looked back. This library is very poorly written, inefficient, and relies on libevent and muggCC. I have now added network module in muggCC directly, so this project will not be maintained!
+
+****
+
 ## other language readme ##
 [中文](readme_cn.md)
 

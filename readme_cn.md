@@ -1,5 +1,10 @@
 # cppevent
 
+已废弃!
+几年之后回头在来看, 这个库代写的很不好, 效率不高, 而且依赖libevent和muggleCC, 我现在已经直接在muggleCC中加入了网络模块的功能, 所以此项目将不在维护!
+
+****
+
 ## 其他语言 ##
 [English](readme.md)
 
